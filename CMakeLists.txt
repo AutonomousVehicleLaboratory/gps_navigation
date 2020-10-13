@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.0.2)
 project(gps_navigation)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-# add_compile_options(-std=c++11)
+add_compile_options(-std=c++11)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -128,6 +128,7 @@ include_directories(
 add_library(${PROJECT_NAME}
   src/gps_navigation.cpp
   src/gps_navigation_node.cpp
+  src/graph.cpp
 )
 
 ## Specify libraries to link a library or executable target against

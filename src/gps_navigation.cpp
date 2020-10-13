@@ -15,5 +15,13 @@ namespace gps_navigation{
   }
   
   void Map::GenerateGraph(){
+    TiXmlHandle node_handle = TiXmlHandle(osm_nodes_);
+    TiXmlHandle way_handle = TiXmlHandle(osm_ways_);
+
+    // Extract all nodes and interpolate (define 2 ids: osm_id; graph_id)
+    // Extract ways and associate ways with nodes (interpolate nodes)
+    //      - every new node has an incremental id assigned to it
+    // 
+
   }
 }

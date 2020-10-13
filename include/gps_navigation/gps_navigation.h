@@ -2,6 +2,8 @@
 #define GPSMAP
 #include <sstream>
 #include <tinyxml.h>
+#include <vector>
+#include <gps_navigation/graph.h>
 #define MAX_THRESH 8.0
 
 namespace gps_navigation{
