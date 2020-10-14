@@ -12,7 +12,6 @@ namespace gps_navigation{
   class Map{
     public:
       Map(std::string map_path);
-      void ParseMap();
       TiXmlDocument xml_map_;
       TiXmlNode *osm_map_;
       TiXmlNode *osm_bounds_;
@@ -21,9 +20,15 @@ namespace gps_navigation{
       bool osm_status_;
       std::vector<Way*> ways_;
       std::unordered_map<int, Node*> nodes_;
-      std::unordered_map<int, Node*> navigation_nodes_;      
-      /* Graph functions */
+      std::unordered_map<int, Node*> navigation_nodes_;
+      
+ 
+      /* Initializes nodes/ways*/
+      void ParseMap();
+      std::vector<Node*> ShortestPath(Node* point1, Node* point2);
+      
     private:
+      OsmGraph osm_graph;
       double GreatCircleDistance(Node* point1, Node* point2); 
       std::vector<Node*> ExtractNodes(int start_node_id, int end_node_id);
   };

@@ -16,7 +16,7 @@ namespace gps_navigation{
     ParseMap();    
     std::cout << " Parsed map" << std::endl;
     // Define OSM graph
-    OsmGraph osm_graph = OsmGraph();
+    osm_graph = OsmGraph();
     
   }
   double Map::GreatCircleDistance(Node* point1, Node* point2){
@@ -151,6 +151,8 @@ namespace gps_navigation{
       } 
 
     } 
-
+  }
+  std::vector<Node*> Map::ShortestPath(Node* point1, Node* point2){
+    return osm_graph.Dijkstra(point1, point2);
   }
 }
