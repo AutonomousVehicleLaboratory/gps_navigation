@@ -11,16 +11,21 @@ namespace gps_navigation{
     osm_bounds_ = osm_map_->FirstChild("bounds");
     osm_nodes_ = osm_map_->FirstChild("node");
     osm_ways_ = osm_map_->FirstChild("way");
-
+  
+    // Parse map
+    ParseMap();    
+    std::cout << " Parsed map" << std::endl;
     // Define OSM graph
     OsmGraph osm_graph = OsmGraph();
     
   }
   double Map::GreatCircleDistance(Node* point1, Node* point2){
     //TODO: verify
+    std::cout << "P1: " << point1->lat << " ; " << point1->lon << std::endl; 
+    std::cout << "P2: " << point2->lat << " ; " << point2->lon << std::endl; 
     double DEG2RAD = M_PI / 180;
     double R = 6371e3;
-    double dLat = point2->lat*DEG2RAD - point1->lon*DEG2RAD;
+    double dLat = point2->lat*DEG2RAD - point1->lat*DEG2RAD;
     double dLon = point2->lon*DEG2RAD - point1->lon*DEG2RAD;
     double a = sin(dLat / 2) * sin(dLat / 2) +
                cos(point1->lat* DEG2RAD) * cos(point2->lat* DEG2RAD) *
@@ -37,6 +42,8 @@ namespace gps_navigation{
     int count_new_nodes = dist / 2.0;
     
     std::vector<Node*> new_nodes;
+    
+    std::cout << "Count new nodes size: " << count_new_nodes << std::endl;
     for (int i = 0; i < count_new_nodes; i++) {
       Node* new_node = new Node;
       new_node->lat = ((count_new_nodes - i) * start_node->second->lat + (i + 1) * end_node->second->lat) / (count_new_nodes + 1);
@@ -125,6 +132,7 @@ namespace gps_navigation{
             // Interpolate nodes
             std::vector<Node*> interpolated_nodes = ExtractNodes(start_node_id, end_node_id);
             // Tag all nodes with new graph_id and insert into ways and nodes 
+            std::cout << "Inner node loop" << std::endl;
             for(unsigned int i=0; i<interpolated_nodes.size(); i++){
               navigation_nodes_.insert({current_graph_id++, interpolated_nodes[i]});
               new_way->nodes.push_back(interpolated_nodes[i]); 
@@ -138,7 +146,6 @@ namespace gps_navigation{
             new_way->nodes.push_back(end_node);
             nd = nd->NextSiblingElement("nd");
             start_node_id = end_node_id;   
-             
           }  
         }
       } 

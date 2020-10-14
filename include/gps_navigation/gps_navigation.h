@@ -4,8 +4,8 @@
 #include <tinyxml.h>
 #include <vector>
 #include <gps_navigation/graph.h>
-//#include <tf/transform_datatypes.h>
-#include <math.h>
+#include <tf/transform_datatypes.h>
+//#include <math.h>
 #define MAX_THRESH 8.0
 
 namespace gps_navigation{
