@@ -21,8 +21,8 @@ namespace gps_navigation{
   }
   double Map::GreatCircleDistance(Node* point1, Node* point2){
     //TODO: verify
-    std::cout << "P1: " << point1->lat << " ; " << point1->lon << std::endl; 
-    std::cout << "P2: " << point2->lat << " ; " << point2->lon << std::endl; 
+    //std::cout << "P1: " << point1->lat << " ; " << point1->lon << std::endl; 
+    //std::cout << "P2: " << point2->lat << " ; " << point2->lon << std::endl; 
     double DEG2RAD = M_PI / 180;
     double R = 6371e3;
     double dLat = point2->lat*DEG2RAD - point1->lat*DEG2RAD;
@@ -43,7 +43,7 @@ namespace gps_navigation{
     
     std::vector<Node*> new_nodes;
     
-    std::cout << "Count new nodes size: " << count_new_nodes << std::endl;
+    //std::cout << "Count new nodes size: " << count_new_nodes << std::endl;
     for (int i = 0; i < count_new_nodes; i++) {
       Node* new_node = new Node;
       new_node->lat = ((count_new_nodes - i) * start_node->second->lat + (i + 1) * end_node->second->lat) / (count_new_nodes + 1);
@@ -62,7 +62,7 @@ namespace gps_navigation{
     // Extract ways of interest (vector<Way*>) with their corresponding nodes (id: osm_id and graph_id)
     //      unordered_map<int, Node*> and interpolate nodes 
     //
-    static unsigned int current_graph_id = 0;
+    int current_graph_id = 0;
     int node_id;
     double lat, lon;
 
@@ -104,6 +104,7 @@ namespace gps_navigation{
             k == "highway" && v == "service" ||
             k == "highway" && v == "tertiary" ||
             k == "highway" && v == "residential") {
+          //std::cout << "found way: " << way_id << std::endl;
           // Create new way struct
           Way* new_way = new Way;
           ways_.push_back(new_way);
@@ -116,12 +117,22 @@ namespace gps_navigation{
           nd->Attribute("ref", &start_node_id);
           auto start_node = nodes_.find(start_node_id)->second;
           auto end_node = nodes_.find(start_node_id)->second;
-
           // Check if node already exists in navigation_nodes_
           auto check = navigation_nodes_.find(start_node->graph_id);
+          if(way_id == 838919370){
+            std::cout << "adding node: " << start_node_id << std::endl;
+            std::cout << "graph_id: " << nodes_.find(start_node_id)->second->graph_id<< std::endl; 
+            std::cout << "osm_id: " << nodes_.find(start_node_id)->second->osm_id<< std::endl;
+            std::cout << "-----" << std::endl; 
+          }
           if(check == navigation_nodes_.end()){
             start_node->graph_id = current_graph_id;
-            navigation_nodes_.insert({current_graph_id++, start_node});
+            navigation_nodes_.insert({current_graph_id, start_node});
+            //std::cout << "verifying: " << current_graph_id << " ; " << navigation_nodes_.find(current_graph_id)->second->graph_id << std::endl; 
+            //std::cout << "verifying2: " << nodes_.find(start_node->osm_id)->second->graph_id<< std::endl; 
+            ++current_graph_id;
+            //std::cout << "current_graph_id: " << current_graph_id << std::endl;
+            //std::cout << "current_graph_id: " << current_graph_id << std::endl;
           }
           new_way->nodes.push_back(start_node); 
 
@@ -132,21 +143,33 @@ namespace gps_navigation{
             // Interpolate nodes
             std::vector<Node*> interpolated_nodes = ExtractNodes(start_node_id, end_node_id);
             // Tag all nodes with new graph_id and insert into ways and nodes 
-            std::cout << "Inner node loop" << std::endl;
             for(unsigned int i=0; i<interpolated_nodes.size(); i++){
-              navigation_nodes_.insert({current_graph_id++, interpolated_nodes[i]});
+              navigation_nodes_.insert({current_graph_id, interpolated_nodes[i]});
+              interpolated_nodes[i]->graph_id = current_graph_id;
               new_way->nodes.push_back(interpolated_nodes[i]); 
+              ++current_graph_id;
             }
             // Check to see if end node already exists in navigation_nodes_
             check = navigation_nodes_.find(end_node->graph_id);
             if(check == navigation_nodes_.end()){
               end_node->graph_id = current_graph_id;
-              navigation_nodes_.insert({current_graph_id++, end_node});  
+              //if(way_id == 838919370){
+              //  std::cout << "graph_id(1) at node: " << end_node->graph_id << std::endl;
+              //}
+              navigation_nodes_.insert({current_graph_id, end_node});  
+              ++current_graph_id;
             }
+            //if(way_id == 838919370){
+            //  std::cout << "end node graph_id: " << nodes_.find(end_node->osm_id)->second->graph_id<< std::endl; 
+            //  std::cout << "graph_id(2) at node: " << end_node->graph_id << std::endl;
+            //  std::cout << "end node osm_id: " << nodes_.find(end_node_id)->second->osm_id<< std::endl;
+            //  std::cout << "-----" << std::endl; 
+            //}
             new_way->nodes.push_back(end_node);
             nd = nd->NextSiblingElement("nd");
             start_node_id = end_node_id;   
-          }  
+          }
+          break;  
         }
       } 
 
@@ -154,7 +177,8 @@ namespace gps_navigation{
   }
   std::vector<Node*> Map::ShortestPath(Node* point1, Node* point2){
     //TODO
-    //return osm_graph.Dijkstra(point1, point2);
+    std::cout << "Starting Dijkstra" << std::endl;
+    std::stack<Node*> traj_stack = osm_graph.Dijkstra(point1, point2);
     std::vector<Node*> todo;
     return todo;
   }

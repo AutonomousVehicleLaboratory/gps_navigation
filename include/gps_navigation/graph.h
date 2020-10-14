@@ -10,8 +10,8 @@ namespace gps_navigation{
   struct Edge;
 
   struct Node{
-    int osm_id;
-    int graph_id;
+    long osm_id;
+    long graph_id = -1;
     float lat;
     float lon;
     Edge* edges;

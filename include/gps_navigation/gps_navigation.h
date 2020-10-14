@@ -3,6 +3,7 @@
 #include <sstream>
 #include <tinyxml.h>
 #include <vector>
+#include <stack>
 #include <gps_navigation/graph.h>
 #include <tf/transform_datatypes.h>
 //#include <math.h>

@@ -78,10 +78,12 @@ namespace gps_navigation{
       }
       
       // If we have not visited node popped yet
+      std::cout << "Popped1" << std::endl;
       if(!current_node->visited){
         // Mark node as visited
         current_node->visited = true;
         // Iterate through neighbors
+        std::cout << "Size of vec: " << current_node->edges->nodes.size() << std::endl;
         auto adj_node_start = current_node->edges->nodes.begin(); 
         auto adj_node_end = current_node->edges->nodes.end();
         auto adj_weight_start = current_node->edges->distances.begin();
@@ -90,6 +92,7 @@ namespace gps_navigation{
         double c;
         while(adj_node_start != adj_node_end){
           c = current_dist + (*adj_weight_start);
+          std::cout << "Iterating through neighbors" << std::endl;
           if(c < (*adj_node_start)->dist){
             // Set prev_node
             (*adj_node_start)->prev_node = current_node;
