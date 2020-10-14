@@ -153,6 +153,9 @@ namespace gps_navigation{
     } 
   }
   std::vector<Node*> Map::ShortestPath(Node* point1, Node* point2){
-    return osm_graph.Dijkstra(point1, point2);
+    //TODO
+    //return osm_graph.Dijkstra(point1, point2);
+    std::vector<Node*> todo;
+    return todo;
   }
 }

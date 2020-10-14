@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <queue>
+#include <stack>
 #include <tf/transform_datatypes.h>
 namespace gps_navigation{
   struct Node;
@@ -16,7 +17,7 @@ namespace gps_navigation{
     Edge* edges;
 
     /* For graph search */
-    double dist = -1; // distance from source
+    double dist = 1000000000; // TODO: distance from source: init to INFTY
     Node* prev_node = NULL; //node that last updated dist
     bool visited = false;
   };
@@ -42,7 +43,7 @@ namespace gps_navigation{
       OsmGraph();
       double GreatCircleDistance(Node* point1, Node* point2);
       void Generate(std::vector<Way*> ways, std::unordered_map<int, Node*> nodes);
-      std::vector<Node*> Dijkstra(Node* point1, Node* point2);
+      std::stack<Node*> Dijkstra(Node* point1, Node* point2);
 
       // Hashtables that represent graph
       //      node_table: maps a node to Node* that saves information about its edges

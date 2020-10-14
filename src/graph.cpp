@@ -52,13 +52,58 @@ namespace gps_navigation{
       }
     }  
   }
-  std::vector<Node*> OsmGraph::Dijkstra(Node* point1, Node* point2){
-    std::vector<Node*> shortest_path;
+  std::stack<Node*> OsmGraph::Dijkstra(Node* point1, Node* point2){
+    std::stack<Node*> shortest_path;
     // To keep track of the total distance
-    int length = 0;
+    int current_dist = 0;
     Node* current_node;
     std::priority_queue<Node*, std::vector<Node*>, NodeComp> pq;
- 
-    return shortest_path;
+    
+    // Find shortest path using Dijkstra's algorithm from point1 to point2 
+    point1->dist = 0;
+    pq.push(point1);
+    while(!pq.empty()){
+      current_node = pq.top();
+      pq.pop();
+      current_dist = current_node->dist;
+      
+      // Check terminating condition: destination reached
+      if(current_node == point2){
+        // Traverse from point2 backwards using prev_node pointer
+        while(current_node != NULL){
+          shortest_path.push(current_node);
+
+        }
+        return shortest_path; 
+      }
+      
+      // If we have not visited node popped yet
+      if(!current_node->visited){
+        // Mark node as visited
+        current_node->visited = true;
+        // Iterate through neighbors
+        auto adj_node_start = current_node->edges->nodes.begin(); 
+        auto adj_node_end = current_node->edges->nodes.end();
+        auto adj_weight_start = current_node->edges->distances.begin();
+        auto adj_weight_endg = current_node->edges->distances.end();
+        
+        double c;
+        while(adj_node_start != adj_node_end){
+          c = current_dist + (*adj_weight_start);
+          if(c < (*adj_node_start)->dist){
+            // Set prev_node
+            (*adj_node_start)->prev_node = current_node;
+            // Update distance
+            (*adj_node_start)->dist = c;
+            pq.push(*adj_node_start);
+          } 
+          ++adj_node_start;
+          ++adj_weight_start;
+        }      
+
+      }
+       
+    } 
+    //return shortest_path;
   }
 }
