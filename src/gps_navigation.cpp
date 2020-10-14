@@ -97,19 +97,47 @@ namespace gps_navigation{
             k == "highway" && v == "service" ||
             k == "highway" && v == "tertiary" ||
             k == "highway" && v == "residential") {
+          // Create new way struct
+          Way* new_way = new Way;
+          ways_.push_back(new_way);
+
           //TODO: iterate through nodes in way
           //TODO: interpolate node pairs and assign unique graph_id
           //TODO: intersert to way's way and push into vector<Way*>
           int start_node_id = 0;
           int end_node_id = 0;
+          nd->Attribute("ref", &start_node_id);
+          auto start_node = nodes_.find(start_node_id)->second;
+          auto end_node = nodes_.find(start_node_id)->second;
+
+          // Check if node already exists in navigation_nodes_
+          auto check = navigation_nodes_.find(start_node->graph_id);
+          if(check == navigation_nodes_.end()){
+            start_node->graph_id = current_graph_id;
+            navigation_nodes_.insert({current_graph_id++, start_node});
+          }
+          new_way->nodes.push_back(start_node); 
+
           while(nd->NextSiblingElement("nd")) {
-            nd->Attribute("ref", &start_node_id);
             nd->NextSiblingElement("nd")->Attribute("ref", &end_node_id); 
-            nd = nd->NextSiblingElement("nd");
-            
+            end_node = nodes_.find(end_node_id)->second;
+ 
             // Interpolate nodes
+            std::vector<Node*> interpolated_nodes = ExtractNodes(start_node_id, end_node_id);
             // Tag all nodes with new graph_id and insert into ways and nodes 
-            std::vector<Node*> interpolated_nodes = ExtractNodes(start_node_id, end_node_id); 
+            for(unsigned int i=0; i<interpolated_nodes.size(); i++){
+              navigation_nodes_.insert({current_graph_id++, interpolated_nodes[i]});
+              new_way->nodes.push_back(interpolated_nodes[i]); 
+            }
+            // Check to see if end node already exists in navigation_nodes_
+            check = navigation_nodes_.find(end_node->graph_id);
+            if(check == navigation_nodes_.end()){
+              end_node->graph_id = current_graph_id;
+              navigation_nodes_.insert({current_graph_id++, end_node});  
+            }
+            new_way->nodes.push_back(end_node);
+            nd = nd->NextSiblingElement("nd");
+            start_node_id = end_node_id;   
              
           }  
         }
