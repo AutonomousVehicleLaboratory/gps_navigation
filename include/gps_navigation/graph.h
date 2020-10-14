@@ -14,7 +14,7 @@ namespace gps_navigation{
     long graph_id = -1;
     float lat;
     float lon;
-    Edge* edges;
+    Edge* edges = NULL;
 
     /* For graph search */
     double dist = 1000000000; // TODO: distance from source: init to INFTY
@@ -42,12 +42,12 @@ namespace gps_navigation{
     public:
       OsmGraph();
       double GreatCircleDistance(Node* point1, Node* point2);
-      void Generate(std::vector<Way*> ways, std::unordered_map<int, Node*> nodes);
+      void Generate(std::vector<Way*> ways, std::unordered_map<int, Node*> node_table);
       std::stack<Node*> Dijkstra(Node* point1, Node* point2);
 
       // Hashtables that represent graph
       //      node_table: maps a node to Node* that saves information about its edges
-      std::unordered_map<int, Node*> node_table;
+      //std::unordered_map<int, Node*> node_table;
 
   };
 }

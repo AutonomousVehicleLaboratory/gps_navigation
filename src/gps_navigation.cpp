@@ -17,6 +17,7 @@ namespace gps_navigation{
     std::cout << " Parsed map" << std::endl;
     // Define OSM graph
     osm_graph = OsmGraph();
+    osm_graph.Generate(ways_, navigation_nodes_);
     
   }
   double Map::GreatCircleDistance(Node* point1, Node* point2){

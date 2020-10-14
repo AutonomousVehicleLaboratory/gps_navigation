@@ -17,7 +17,7 @@ namespace gps_navigation{
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
     return R*c;
   }  
-  void OsmGraph::Generate(std::vector<Way*> ways, std::unordered_map<int, Node*> nodes){
+  void OsmGraph::Generate(std::vector<Way*> ways, std::unordered_map<int, Node*> node_table){
     static int edge_counter = 0;
     for (unsigned int i=0; i<ways.size(); i++){
       for (unsigned int j=0; j<ways[i]->nodes.size()-1; j++){
@@ -27,24 +27,36 @@ namespace gps_navigation{
         auto end_node = node_table.find(end_node_id);
         double dist = GreatCircleDistance(start_node->second, end_node->second);
         
-        // If node dne, add it and push end node to its vector of nodes 
-        if(start_node == node_table.end()){
-          node_table.insert({ start_node_id, ways[i]->nodes[j]});
-          start_node = node_table.find(start_node_id);
-          start_node->second->edges->nodes.push_back(ways[i]->nodes[j+1]);
-          start_node->second->edges->distances.push_back(dist);
-          continue;
+        if(start_node->second == NULL || end_node->second == NULL){
+          std::cout << "NOT FOUND-----------------" << std::endl;
         }
+        if(ways[i]->nodes[j]->osm_id == 7180450222){
+          std::cout << "node read-----------------" << std::endl;
+        }
+        // If node dne, add it and push end node to its vector of nodes 
+        //if(start_node == node_table.end()){
+        //  //TODO: remove this
+        //  std::cout << "This should not execute" << std::endl;
+        //  node_table.insert({ start_node_id, ways[i]->nodes[j]});
+        //  start_node = node_table.find(start_node_id);
+        //  start_node->second->edges->nodes.push_back(ways[i]->nodes[j+1]);
+        //  start_node->second->edges->distances.push_back(dist);
+        //  continue;
+        //}
         // Sanity check in case start_node and end_node connection exists
         bool connection_exists = false;
-        for(unsigned int k=0;k<start_node->second->edges->nodes.size(); k++){
-          if(start_node->second->edges->nodes[k]->graph_id == end_node_id){
-            connection_exists = true;
-            break;
-          } 
-        }
+        if(start_node->second->edges != NULL){
+          //if(start_node->second->edges
+          for(unsigned int k=0;k<start_node->second->edges->nodes.size(); k++){
+            if(start_node->second->edges->nodes[k]->graph_id == end_node_id){
+              connection_exists = true;
+              break;
+            } 
+          }
+        } 
         // If edge connection between start_node and end_node dne, create it 
         if(!connection_exists){
+          start_node->second->edges = new Edge;
           start_node->second->edges->nodes.push_back(end_node->second);
           start_node->second->edges->distances.push_back(dist);
         } 
@@ -63,27 +75,29 @@ namespace gps_navigation{
     point1->dist = 0;
     pq.push(point1);
     while(!pq.empty()){
+      std::cout << "PQ size: " << pq.size() << std::endl;
       current_node = pq.top();
       pq.pop();
       current_dist = current_node->dist;
       
       // Check terminating condition: destination reached
-      if(current_node == point2){
+      if(current_node->osm_id == point2->osm_id){
+        
+        std::cout << "Found shortest path" << std::endl;
         // Traverse from point2 backwards using prev_node pointer
         while(current_node != NULL){
           shortest_path.push(current_node);
-
+          current_node = current_node->prev_node;
         }
+        std::cout << "returning " << std::endl;
         return shortest_path; 
       }
       
       // If we have not visited node popped yet
-      std::cout << "Popped1" << std::endl;
       if(!current_node->visited){
         // Mark node as visited
         current_node->visited = true;
         // Iterate through neighbors
-        std::cout << "Size of vec: " << current_node->edges->nodes.size() << std::endl;
         auto adj_node_start = current_node->edges->nodes.begin(); 
         auto adj_node_end = current_node->edges->nodes.end();
         auto adj_weight_start = current_node->edges->distances.begin();
@@ -92,7 +106,6 @@ namespace gps_navigation{
         double c;
         while(adj_node_start != adj_node_end){
           c = current_dist + (*adj_weight_start);
-          std::cout << "Iterating through neighbors" << std::endl;
           if(c < (*adj_node_start)->dist){
             // Set prev_node
             (*adj_node_start)->prev_node = current_node;
