@@ -5,7 +5,7 @@ namespace gps_navigation{
   OsmGraph::OsmGraph(){
   }
   
-  void OsmGraph::Generate(std::vector<Way*> ways, std::vector<Node*> nodes){
+  void OsmGraph::Generate(std::vector<Way*> ways, std::unordered_map<int, Node*> nodes){
     static int edge_counter = 0;
     for (unsigned int i=0; i<ways.size(); i++){
       for (unsigned int j=0; j<ways[i]->nodes.size()-1; j++){
