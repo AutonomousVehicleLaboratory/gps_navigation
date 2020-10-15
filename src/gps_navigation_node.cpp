@@ -26,7 +26,9 @@ int main(int argc, char **argv){
   //point2->lat = 32.8849806;
   //point2->lon = -117.2300328;
   long long point1_id = 7180450222;
-  long long point2_id = 1176652298;
+  //long long point1_id = 1176652302;
+  //long long point2_id = 1176652298;
+  long long point2_id = 1176652247;
   point1 = osm_map.nodes_.find(point1_id)->second;
   point2 = osm_map.nodes_.find(point2_id)->second;
   std::cout << "1: graph_id: " << point1->graph_id << std::endl;

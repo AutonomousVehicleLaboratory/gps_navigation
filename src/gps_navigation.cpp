@@ -108,6 +108,7 @@ namespace gps_navigation{
           //std::cout << "found way: " << way_id << std::endl;
           // Create new way struct
           Way* new_way = new Way;
+          new_way->way_id = way_id;
           ways_.push_back(new_way);
 
           //TODO: iterate through nodes in way
@@ -179,8 +180,16 @@ namespace gps_navigation{
   std::vector<Node*> Map::ShortestPath(Node* point1, Node* point2){
     //TODO
     std::cout << "Starting Dijkstra" << std::endl;
+    std::vector<Node*> traj;
     std::stack<Node*> traj_stack = osm_graph.Dijkstra(point1, point2);
-    std::vector<Node*> todo;
-    return todo;
+    //for(unsigned int i=0; i<traj_stack.size(); i++){
+    while(!traj_stack.empty()){
+      if(traj_stack.top()->osm_id != -1){ 
+        std::cout << "Node: " << traj_stack.top()->osm_id << " | " << traj_stack.top()->graph_id << std::endl;
+      }
+      traj.push_back(traj_stack.top());
+      traj_stack.pop();
+    }
+    return traj;
   }
 }

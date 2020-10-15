@@ -10,7 +10,7 @@ namespace gps_navigation{
   struct Edge;
 
   struct Node{
-    long osm_id;
+    long osm_id = -1;
     long graph_id = -1;
     float lat;
     float lon;
@@ -29,6 +29,7 @@ namespace gps_navigation{
 
   struct Way{
     std::vector<Node*> nodes;
+    int way_id = -1;
   };
 
   class NodeComp {
