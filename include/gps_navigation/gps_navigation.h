@@ -26,11 +26,11 @@ namespace gps_navigation{
  
       /* Initializes nodes/ways*/
       void ParseMap();
+      Node* FindClosestNode(double lat, double lon);
       std::vector<Node*> ShortestPath(Node* point1, Node* point2);
       
     private:
       OsmGraph osm_graph;
-      //double GreatCircleDistance(Node* point1, Node* point2); 
       std::vector<Node*> ExtractNodes(int start_node_id, int end_node_id);
   };
 }

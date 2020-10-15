@@ -5,19 +5,7 @@ namespace gps_navigation{
 
   OsmGraph::OsmGraph(){
   }
-  /*
-  double OsmGraph::GreatCircleDistance(Node* point1, Node* point2){
-    //TODO: verify
-    double DEG2RAD = M_PI / 180;
-    double R = 6371e3;
-    double dLat = point2->lat*DEG2RAD - point1->lat*DEG2RAD;
-    double dLon = point2->lon*DEG2RAD - point1->lon*DEG2RAD;
-    double a = sin(dLat / 2) * sin(dLat / 2) +
-               cos(point1->lat* DEG2RAD) * cos(point2->lat* DEG2RAD) *
-               sin(dLon / 2) * sin(dLon / 2);
-    double c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    return R*c;
-  }*/  
+
   void OsmGraph::Generate(std::vector<Way*> ways, std::unordered_map<int, Node*> node_table){
     static int edge_counter = 0;
     for (unsigned int i=0; i<ways.size(); i++){
