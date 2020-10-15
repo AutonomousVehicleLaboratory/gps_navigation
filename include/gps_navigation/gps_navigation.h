@@ -30,7 +30,7 @@ namespace gps_navigation{
       
     private:
       OsmGraph osm_graph;
-      double GreatCircleDistance(Node* point1, Node* point2); 
+      //double GreatCircleDistance(Node* point1, Node* point2); 
       std::vector<Node*> ExtractNodes(int start_node_id, int end_node_id);
   };
 }

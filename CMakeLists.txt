@@ -129,6 +129,7 @@ add_library(${PROJECT_NAME}
   src/gps_navigation.cpp
   src/gps_navigation_node.cpp
   src/graph.cpp
+  src/utils.cpp
 )
 
 ## Specify libraries to link a library or executable target against

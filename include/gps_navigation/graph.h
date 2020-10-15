@@ -42,7 +42,7 @@ namespace gps_navigation{
   class OsmGraph{
     public:
       OsmGraph();
-      double GreatCircleDistance(Node* point1, Node* point2);
+      //double GreatCircleDistance(Node* point1, Node* point2);
       void Generate(std::vector<Way*> ways, std::unordered_map<int, Node*> node_table);
       std::stack<Node*> Dijkstra(Node* point1, Node* point2);
 

@@ -1,4 +1,5 @@
 #include <gps_navigation/gps_navigation.h>
+#include <gps_navigation/utils.h>
 
 namespace gps_navigation{
   Map::Map(std::string map_path){
@@ -20,6 +21,7 @@ namespace gps_navigation{
     osm_graph.Generate(ways_, navigation_nodes_);
     
   }
+  /*
   double Map::GreatCircleDistance(Node* point1, Node* point2){
     //TODO: verify
     //std::cout << "P1: " << point1->lat << " ; " << point1->lon << std::endl; 
@@ -33,7 +35,7 @@ namespace gps_navigation{
                sin(dLon / 2) * sin(dLon / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
     return R*c; 
-  }
+  }*/
 
   std::vector<Node*> Map::ExtractNodes(int start_node_id, int end_node_id){
     //TODO: verify

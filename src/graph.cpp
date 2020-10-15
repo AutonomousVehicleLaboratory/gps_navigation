@@ -1,10 +1,11 @@
+#include <gps_navigation/utils.h>
 #include <gps_navigation/graph.h>
 
 namespace gps_navigation{
 
   OsmGraph::OsmGraph(){
   }
-
+  /*
   double OsmGraph::GreatCircleDistance(Node* point1, Node* point2){
     //TODO: verify
     double DEG2RAD = M_PI / 180;
@@ -16,7 +17,7 @@ namespace gps_navigation{
                sin(dLon / 2) * sin(dLon / 2);
     double c = 2 * atan2(sqrt(a), sqrt(1 - a));
     return R*c;
-  }  
+  }*/  
   void OsmGraph::Generate(std::vector<Way*> ways, std::unordered_map<int, Node*> node_table){
     static int edge_counter = 0;
     for (unsigned int i=0; i<ways.size(); i++){
