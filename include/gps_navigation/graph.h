@@ -17,7 +17,7 @@ namespace gps_navigation{
     Edge* edges = NULL;
 
     /* For graph search */
-    double dist = 1000000000; // TODO: distance from source: init to INFTY
+    double dist = 1000000; // TODO: distance from source: init to INFTY
     Node* prev_node = NULL; //node that last updated dist
     bool visited = false;
   };
@@ -30,6 +30,7 @@ namespace gps_navigation{
   struct Way{
     std::vector<Node*> nodes;
     int way_id = -1;
+    bool one_way = false;
   };
 
   class NodeComp {

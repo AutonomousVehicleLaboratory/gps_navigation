@@ -29,8 +29,17 @@ int main(int argc, char **argv){
   //long long point1_id = 1176652302;
   //long long point2_id = 1176652298;
   long long point2_id = 1176652247;
-  point1 = osm_map.nodes_.find(point1_id)->second;
-  point2 = osm_map.nodes_.find(point2_id)->second;
+  //point1 = osm_map.nodes_.find(point1_id)->second;
+  //point2 = osm_map.nodes_.find(point2_id)->second;
+
+  double lat1 = 32.88465; 
+  double lon1 = -117.24244;
+  double lat2 = 32.88184;
+  double lon2 = -117.23484; 
+  Node* point1_shortest = osm_map.FindClosestNode(lat1, lon1); 
+  Node* point2_shortest = osm_map.FindClosestNode(lat2, lon2); 
+  
+  /*
   std::cout << "1: graph_id: " << point1->graph_id << std::endl;
   std::cout << "1: osm_id: " << point1->osm_id << std::endl;
   std::cout << "1: lat: " << point1->lat<< std::endl;
@@ -38,9 +47,9 @@ int main(int argc, char **argv){
   std::cout << "2: graph_id: " << point2->graph_id << std::endl;
   std::cout << "2: osm_id: " << point2->osm_id << std::endl;
   std::cout << "2: lat: " << point2->lat<< std::endl;
-  std::cout << "2: lon: " << point2->lon<< std::endl;
+  std::cout << "2: lon: " << point2->lon<< std::endl;*/
 
-  std::vector<Node*> plan = osm_map.ShortestPath(point1, point2);  
+  std::vector<Node*> plan = osm_map.ShortestPath(point1_shortest, point2_shortest);  
   ros::spin();
   
   return 0;

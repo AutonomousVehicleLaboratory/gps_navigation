@@ -29,27 +29,49 @@ namespace gps_navigation{
         //  start_node->second->edges->distances.push_back(dist);
         //  continue;
         //}
-        // Sanity check in case start_node and end_node connection exists
+        // Perform start_node->end_node edge connection 
         bool node_exists = false;
         if(start_node->second->edges != NULL){
-          //if(start_node->second->edges
           for(unsigned int k=0;k<start_node->second->edges->nodes.size(); k++){
             if(start_node->second->edges->nodes[k]->graph_id == end_node_id){
               node_exists = true;
               break;
             } 
           }
-        } 
-        // If edge connection between start_node and end_node dne, create it 
+        }
         if(!node_exists){
           if(start_node->second->edges == NULL){
             start_node->second->edges = new Edge;
           }
           start_node->second->edges->nodes.push_back(end_node->second);
           start_node->second->edges->distances.push_back(dist);
-        } 
+        }
+        // Perform end_node->start_node edge connection if applicable 
+        if(!ways[i]->one_way){
+          node_exists = false;
+          if(end_node->second->edges != NULL){
+            for(unsigned int k=0;k<end_node->second->edges->nodes.size(); k++){
+              if(end_node->second->edges->nodes[k]->graph_id == start_node_id){
+                node_exists = true;
+                break;
+              } 
+            }
+          }
+          if(!node_exists){
+            if(end_node->second->edges == NULL){
+              end_node->second->edges = new Edge;
+            }
+            end_node->second->edges->nodes.push_back(start_node->second);
+            end_node->second->edges->distances.push_back(dist);
+          }
+        }
+        
+        // Perform end_node->start_node edge connection if applicable
+ 
+        // TODO: If end->start edge dne and it's not a oneway  
+         
         //if(ways[i]->way_id == 101920218 && start_node->second->osm_id != -1){
-        if(start_node->second->osm_id == 1176652302){
+        /*if(start_node->second->osm_id == 1176652302){
           std::cout << "#########" << std::endl;
           std::cout << "node: " << start_node->second->osm_id << std::endl;
           if(start_node->second->edges == NULL){
@@ -58,7 +80,7 @@ namespace gps_navigation{
             std::cout << " -> " << start_node->second->edges->nodes.size()<< std::endl;
           }
           
-        }
+        }*/
 
       }
     }  
@@ -69,6 +91,8 @@ namespace gps_navigation{
     int current_dist = 0;
     Node* current_node;
     std::priority_queue<Node*, std::vector<Node*>, NodeComp> pq;
+    std::cout << "Node1 graph_id: " << point1->graph_id << std::endl;
+    std::cout << "Node2 graph_id: " << point2->graph_id << std::endl;
     
     // Find shortest path using Dijkstra's algorithm from point1 to point2 
     point1->dist = 0;
@@ -80,12 +104,13 @@ namespace gps_navigation{
       current_dist = current_node->dist;
       
       // Check terminating condition: destination reached
-      if(current_node->osm_id == point2->osm_id){
+      if(current_node->graph_id == point2->graph_id){
         
-        std::cout << "Found shortest path to osm_id: " << current_node->osm_id << std::endl;
+        std::cout << "Found shortest path to osm_id: " << current_node->graph_id << std::endl;
         // Traverse from point2 backwards using prev_node pointer
         int p=0;
         while(current_node != NULL){
+          //std::cout << "iter" << std::endl;
           //if(current_node->osm_id != -1){
           //  std::cout << "Path (" << p << "): " << current_node->osm_id << std::endl;
           //  ++p;
@@ -99,32 +124,42 @@ namespace gps_navigation{
       // If we have not visited node popped yet
       if(!current_node->visited){
         // Mark node as visited
+        //std::cout << "1"<< std::endl;
         current_node->visited = true;
         // Iterate through neighbors
         //std::cout << "1: " << current_node->osm_id << std::endl;
+        if(current_node->edges == NULL){
+          std::cout << "null edges" << std::endl;
+          std::cout << "osm_id: " << current_node->osm_id << std::endl;
+          continue;
+        } 
         auto adj_node_start = current_node->edges->nodes.begin(); 
         auto adj_node_end = current_node->edges->nodes.end();
         auto adj_weight_start = current_node->edges->distances.begin();
         auto adj_weight_end = current_node->edges->distances.end();
+        //std::cout << "2"<< std::endl;
         
         double c;
-        //std::cout << "2" << std::endl;
         while(adj_node_start != adj_node_end){
-          c = current_dist + (*adj_weight_start);
-          if(c < (*adj_node_start)->dist){
-            // Set prev_node
-            (*adj_node_start)->prev_node = current_node;
-            // Update distance
-            (*adj_node_start)->dist = c;
-            pq.push(*adj_node_start);
-          } 
+          if(!(*adj_node_start)->visited){
+
+            c = current_dist + (*adj_weight_start);
+            if(c < (*adj_node_start)->dist){
+              // Set prev_node
+              (*adj_node_start)->prev_node = current_node;
+              // Update distance
+              (*adj_node_start)->dist = c;
+              pq.push(*adj_node_start);
+            } 
+          }
           ++adj_node_start;
           ++adj_weight_start;
         }      
 
       }
        
-    } 
+    }
+    std::cout << "Graph disconnected"<< std::endl; 
     //return shortest_path;
   }
 }
