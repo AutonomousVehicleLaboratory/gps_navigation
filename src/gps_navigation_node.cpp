@@ -35,8 +35,8 @@ visualization_msgs::Marker visualize_path(std::vector<Node*> path){
   path_viz.action = visualization_msgs::Marker::ADD;
   path_viz.color.g = 1.0f;
   path_viz.color.a = 1.0;
-  path_viz.scale.x = 3.2;
-  path_viz.scale.y = 3.2;
+  path_viz.scale.x = 6.2;
+  path_viz.scale.y = 6.2;
    
   Node* ref_start = new Node;
   ref_start->lat = 32.88465;

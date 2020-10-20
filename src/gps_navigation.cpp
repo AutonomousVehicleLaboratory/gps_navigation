@@ -27,7 +27,7 @@ namespace gps_navigation{
     auto start_node = nodes_.find(start_node_id);
     auto end_node = nodes_.find(end_node_id);
     double dist = GreatCircleDistance(start_node->second, end_node->second);
-    int count_new_nodes = dist / 20.0;
+    int count_new_nodes = dist / 2.0;
     
     std::vector<Node*> new_nodes;
     

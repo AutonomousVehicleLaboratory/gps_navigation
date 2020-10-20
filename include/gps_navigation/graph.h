@@ -13,8 +13,8 @@ namespace gps_navigation{
   struct Node{
     long osm_id = -1;
     long graph_id = -1;
-    float lat;
-    float lon;
+    double lat;
+    double lon;
     Edge* edges = NULL;
 
     /* For graph search */
