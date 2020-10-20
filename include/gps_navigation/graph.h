@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <queue>
 #include <stack>
+#include <math.h>
 #include <tf/transform_datatypes.h>
 namespace gps_navigation{
   struct Node;
@@ -17,7 +18,7 @@ namespace gps_navigation{
     Edge* edges = NULL;
 
     /* For graph search */
-    double dist = 1000000; // TODO: distance from source: init to INFTY
+    double dist = INFINITY; // TODO: distance from source: init to INFTY
     Node* prev_node = NULL; //node that last updated dist
     bool visited = false;
   };

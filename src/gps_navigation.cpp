@@ -27,7 +27,7 @@ namespace gps_navigation{
     auto start_node = nodes_.find(start_node_id);
     auto end_node = nodes_.find(end_node_id);
     double dist = GreatCircleDistance(start_node->second, end_node->second);
-    int count_new_nodes = dist / 2.0;
+    int count_new_nodes = dist / 20.0;
     
     std::vector<Node*> new_nodes;
     
@@ -163,8 +163,8 @@ namespace gps_navigation{
     auto nodes_end = navigation_nodes_.end();
     //TODO: set to infty
     Node* shortest_node = NULL;
-    double shortest_distance = 100000;
-    double curr_distance = 100000;
+    double shortest_distance = INFINITY;
+    double curr_distance = INFINITY;
     while(nodes_start != nodes_end){
       curr_distance = GreatCircleDistance(&point, nodes_start->second);
       if(curr_distance < shortest_distance ){
@@ -183,9 +183,9 @@ namespace gps_navigation{
     std::vector<Node*> traj;
     std::stack<Node*> traj_stack = osm_graph.Dijkstra(point1, point2);
     while(!traj_stack.empty()){
-      if(traj_stack.top()->osm_id != -1){ 
-        std::cout << "Node: " << traj_stack.top()->graph_id << " | " << traj_stack.top()->graph_id << std::endl;
-      }
+      //if(traj_stack.top()->osm_id != -1){ 
+      //  std::cout << "node: " << traj_stack.top()->graph_id << " | " << traj_stack.top()->graph_id << std::endl;
+      //}
       traj.push_back(traj_stack.top());
       traj_stack.pop();
     }
