@@ -1,8 +1,6 @@
 #include <gps_navigation/utils.h>
 
 double gps_navigation::GreatCircleDistance(Node* point1, Node* point2){
-  double DEG2RAD = M_PI / 180;
-  double R = 6371e3;
   double dLat = point2->lat*kDegRadsConversion - point1->lat*kDegRadsConversion;
   double dLon = point2->lon*kDegRadsConversion - point1->lon*kDegRadsConversion;
   double a = sin(dLat / 2) * sin(dLat / 2) +

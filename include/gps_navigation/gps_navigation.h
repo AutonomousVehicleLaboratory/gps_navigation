@@ -28,6 +28,7 @@ namespace gps_navigation{
       /* Initializes nodes/ways*/
       void ParseMap();
       Node* FindClosestNode(double lat, double lon);
+      Node* FindClosestNodeRelative(double x, double y, double origin_x, double origin_y);
       std::vector<Node*> ShortestPath(Node* point1, Node* point2);
       
     private:

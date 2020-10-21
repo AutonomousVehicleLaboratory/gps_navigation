@@ -10,11 +10,17 @@
 using namespace gps_navigation;
 ros::Publisher gps_viz_pub;
 bool gps_start = false;
+bool gps_dest = false;
 double lat_start = 0.0;
 double lon_start = 0.0;
-double lat_dest = 0.0;
-double lon_dest = 0.0;
+double x_dest = 0.0;
+double y_dest = 0.0;
 
+void ClickedPointCallback(const geometry_msgs::PointStamped::ConstPtr& msg){
+  x_dest = msg->point.x; 
+  y_dest = msg->point.y;
+  gps_dest = true; 
+}
 void GpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg){
   if(!gps_start){
     gps_start = true;
@@ -146,6 +152,7 @@ int main(int argc, char **argv){
   ros::Publisher road_network_viz = n.advertise<nav_msgs::Path>("/road_network", 1000);
   gps_viz_pub = n.advertise<visualization_msgs::Marker>("/gps_pose", 1000);
   ros::Subscriber gps_pose = n.subscribe("/lat_lon", 1000, GpsCallback);
+  ros::Subscriber clicked_point = n.subscribe("/clicked_point", 1000, ClickedPointCallback);
   std::string osm_path = "/home/dfpazr/Documents/CogRob/avl/planning/gps_planner_nv/src/osm_planner/osm_example/ucsd-small.osm";
   gps_navigation::Map osm_map(osm_path);
   Node* point1;
@@ -163,15 +170,16 @@ int main(int argc, char **argv){
   Node* point2_shortest; 
   std::vector<Node*> plan; 
   while(ros::ok()){
-    if(!is_done && gps_start){
+    nav_msgs::Path road_networks = visualize_network(osm_map.ways_, road_network_viz);
+    if(!is_done && gps_start && gps_dest){
       point1_shortest = osm_map.FindClosestNode(lat_start, lon_start); 
-      point2_shortest = osm_map.FindClosestNode(lat1, lon1); 
+      //point2_shortest = osm_map.FindClosestNode(lat1, lon1); 
+      point2_shortest = osm_map.FindClosestNodeRelative(x_dest, y_dest, kOsmOriginX, kOsmOriginY); 
       plan = osm_map.ShortestPath(point1_shortest, point2_shortest); 
       is_done = true;
     }
     if(is_done){
       nav_msgs::Path shortest_path = visualize_path(plan);
-      nav_msgs::Path road_networks = visualize_network(osm_map.ways_, road_network_viz);
       shortest_path_viz.publish(shortest_path); 
     }
     ros::spinOnce();

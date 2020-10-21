@@ -161,7 +161,7 @@ namespace gps_navigation{
     point.lon = lon;
     auto nodes_start = navigation_nodes_.begin();
     auto nodes_end = navigation_nodes_.end();
-    //TODO: set to infty
+
     Node* shortest_node = NULL;
     double shortest_distance = INFINITY;
     double curr_distance = INFINITY;
@@ -177,6 +177,32 @@ namespace gps_navigation{
     
     return shortest_node;
   }
+  Node* Map::FindClosestNodeRelative(double x, double y, double origin_lat, double origin_lon){
+    Node point;
+    point.lat = origin_lat;
+    point.lon = origin_lon;
+    auto nodes_start = navigation_nodes_.begin();
+    auto nodes_end = navigation_nodes_.end();
+
+    Node* shortest_node = NULL;
+    double shortest_distance = INFINITY;
+    double curr_distance = INFINITY;
+    std::pair<double, double> curr_distance_vec;
+    while(nodes_start != nodes_end){
+      curr_distance_vec = RelativeDisplacement(&point, nodes_start->second);
+      curr_distance = sqrt(pow(curr_distance_vec.first - x, 2) + pow(curr_distance_vec.second -y, 2)); 
+      if(curr_distance < shortest_distance ){
+        shortest_distance = curr_distance;
+        shortest_node = nodes_start->second; 
+      }
+      ++nodes_start;
+    }
+    std::cout << "Relative Node (" << shortest_node->graph_id << ")distance: " << shortest_distance << std::endl;
+    
+    return shortest_node;
+
+  }
+
   std::vector<Node*> Map::ShortestPath(Node* point1, Node* point2){
     //TODO
     std::cout << "Starting Dijkstra" << std::endl;
