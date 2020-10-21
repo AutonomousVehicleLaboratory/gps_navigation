@@ -9,11 +9,22 @@
 
 using namespace gps_navigation;
 ros::Publisher gps_viz_pub;
+bool gps_start = false;
+double lat_start = 0.0;
+double lon_start = 0.0;
+double lat_dest = 0.0;
+double lon_dest = 0.0;
 
 void GpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg){
+  if(!gps_start){
+    gps_start = true;
+  }
+  lat_start = msg->latitude;
+  lon_start = msg->longitude;
+
   Node* ref_start = new Node;
-  ref_start->lat = 32.88465;
-  ref_start->lon = -117.24244;
+  ref_start->lat = kOsmOriginX;
+  ref_start->lon = kOsmOriginY;
     
   Node* gps_pose = new Node;
   gps_pose->lat = msg->latitude;
@@ -131,8 +142,6 @@ nav_msgs::Path visualize_network(std::vector<Way*> ways, ros::Publisher way_pub)
 int main(int argc, char **argv){
   ros::init(argc, argv, "gps_navigation");
   ros::NodeHandle n;
-  //ros::Publisher shortest_path = n.advertise<nav_msgs::Path>("/road_network", 1000);
-  //ros::Publisher shortest_path_viz = n.advertise<visualization_msgs::Marker>("/shortest_path", 1000);
   ros::Publisher shortest_path_viz = n.advertise<nav_msgs::Path>("/shortest_path", 1000);
   ros::Publisher road_network_viz = n.advertise<nav_msgs::Path>("/road_network", 1000);
   gps_viz_pub = n.advertise<visualization_msgs::Marker>("/gps_pose", 1000);
@@ -148,15 +157,23 @@ int main(int argc, char **argv){
   double lon2 = -117.24244;
   double lat1 = 32.88184;
   double lon1 = -117.23484; 
-  Node* point1_shortest = osm_map.FindClosestNode(lat1, lon1); 
-  Node* point2_shortest = osm_map.FindClosestNode(lat2, lon2); 
-  
-  std::vector<Node*> plan = osm_map.ShortestPath(point1_shortest, point2_shortest); 
+  //gps_navigation::Map osm_map(osm_path);
+  bool is_done = false;
+  Node* point1_shortest; 
+  Node* point2_shortest; 
+  std::vector<Node*> plan; 
   while(ros::ok()){
-    //visualization_msgs::Marker shortest_path = visualize_path(plan);
-    nav_msgs::Path shortest_path = visualize_path(plan);
-    nav_msgs::Path road_networks = visualize_network(osm_map.ways_, road_network_viz);
-    shortest_path_viz.publish(shortest_path);  
+    if(!is_done && gps_start){
+      point1_shortest = osm_map.FindClosestNode(lat_start, lon_start); 
+      point2_shortest = osm_map.FindClosestNode(lat1, lon1); 
+      plan = osm_map.ShortestPath(point1_shortest, point2_shortest); 
+      is_done = true;
+    }
+    if(is_done){
+      nav_msgs::Path shortest_path = visualize_path(plan);
+      nav_msgs::Path road_networks = visualize_network(osm_map.ways_, road_network_viz);
+      shortest_path_viz.publish(shortest_path); 
+    }
     ros::spinOnce();
   }
   
