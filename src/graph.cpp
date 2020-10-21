@@ -19,16 +19,6 @@ namespace gps_navigation{
         if(start_node->second == NULL || end_node->second == NULL){
           std::cout << "NOT FOUND-----------------" << std::endl;
         }
-        // If node dne, add it and push end node to its vector of nodes 
-        //if(start_node == node_table.end()){
-        //  //TODO: remove this
-        //  std::cout << "This should not execute" << std::endl;
-        //  node_table.insert({ start_node_id, ways[i]->nodes[j]});
-        //  start_node = node_table.find(start_node_id);
-        //  start_node->second->edges->nodes.push_back(ways[i]->nodes[j+1]);
-        //  start_node->second->edges->distances.push_back(dist);
-        //  continue;
-        //}
         // Perform start_node->end_node edge connection 
         bool node_exists = false;
         if(start_node->second->edges != NULL){
@@ -66,24 +56,19 @@ namespace gps_navigation{
           }
         }
         
-        // Perform end_node->start_node edge connection if applicable
- 
-        // TODO: If end->start edge dne and it's not a oneway  
-         
-        //if(ways[i]->way_id == 101920218 && start_node->second->osm_id != -1){
-        /*if(start_node->second->osm_id == 1176652302){
-          std::cout << "#########" << std::endl;
-          std::cout << "node: " << start_node->second->osm_id << std::endl;
-          if(start_node->second->edges == NULL){
-            std::cout << " -> -1" << std::endl;
-          }else{
-            std::cout << " -> " << start_node->second->edges->nodes.size()<< std::endl;
-          }
-          
-        }*/
-
       }
     }  
+  }
+  void OsmGraph::ResetGraph(std::unordered_map<int, Node*> node_table){
+    auto node_start = node_table.begin();  
+    auto node_end = node_table.end();
+    while(node_start != node_end){
+       node_start->second->prev_node = NULL;
+       node_start->second->visited = false;
+       node_start->second->dist = INFINITY;
+      
+      ++node_start;
+    } 
   }
   std::stack<Node*> OsmGraph::Dijkstra(Node* point1, Node* point2){
     std::stack<Node*> shortest_path;
@@ -129,8 +114,6 @@ namespace gps_navigation{
         // Iterate through neighbors
         //std::cout << "1: " << current_node->osm_id << std::endl;
         if(current_node->edges == NULL){
-          std::cout << "null edges" << std::endl;
-          std::cout << "osm_id: " << current_node->osm_id << std::endl;
           continue;
         } 
         auto adj_node_start = current_node->edges->nodes.begin(); 

@@ -23,6 +23,7 @@ namespace gps_navigation{
       std::vector<Way*> ways_;
       std::unordered_map<int, Node*> nodes_;
       std::unordered_map<int, Node*> navigation_nodes_;
+      OsmGraph osm_graph;
       
  
       /* Initializes nodes/ways*/
@@ -32,7 +33,6 @@ namespace gps_navigation{
       std::vector<Node*> ShortestPath(Node* point1, Node* point2);
       
     private:
-      OsmGraph osm_graph;
       std::vector<Node*> ExtractNodes(int start_node_id, int end_node_id);
   };
 }

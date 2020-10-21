@@ -45,6 +45,7 @@ namespace gps_navigation{
     public:
       OsmGraph();
       void Generate(std::vector<Way*> ways, std::unordered_map<int, Node*> node_table);
+      void ResetGraph(std::unordered_map<int, Node*> node_table);
       std::stack<Node*> Dijkstra(Node* point1, Node* point2);
 
       // Hashtables that represent graph
