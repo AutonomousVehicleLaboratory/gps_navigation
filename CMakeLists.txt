@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   std_msgs
   sensor_msgs
+  image_transport
+  cv_bridge
 )
 find_package(TinyXML REQUIRED)
 find_package(OpenCV REQUIRED)
