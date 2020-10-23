@@ -18,7 +18,7 @@ namespace gps_navigation{
     Edge* edges = NULL;
 
     /* For graph search */
-    double dist = INFINITY; // TODO: distance from source: init to INFTY
+    double dist = INFINITY; 
     Node* prev_node = NULL; //node that last updated dist
     bool visited = false;
   };
@@ -48,9 +48,6 @@ namespace gps_navigation{
       void ResetGraph(std::unordered_map<int, Node*> node_table);
       std::stack<Node*> Dijkstra(Node* point1, Node* point2);
 
-      // Hashtables that represent graph
-      //      node_table: maps a node to Node* that saves information about its edges
-      //std::unordered_map<int, Node*> node_table;
 
   };
 }

@@ -2,6 +2,7 @@
 #include <gps_navigation/gps_navigation.h>
 #include <gps_navigation/graph.h>
 #include <gps_navigation/utils.h>
+#include <gps_navigation/render_bev.h>
 #include <vector>
 #include <nav_msgs/Path.h>
 #include <visualization_msgs/Marker.h>
@@ -153,8 +154,9 @@ int main(int argc, char **argv){
   gps_viz_pub = n.advertise<visualization_msgs::Marker>("/gps_pose", 1000);
   ros::Subscriber gps_pose = n.subscribe("/lat_lon", 1000, GpsCallback);
   ros::Subscriber clicked_point = n.subscribe("/move_base_simple/goal", 1000, ClickedPointCallback);
-  std::string osm_path = "/home/dfpazr/Documents/CogRob/avl/planning/gps_planner_nv/src/osm_planner/osm_example/ucsd-small.osm";
+  std::string osm_path = "/home/dfpazr/Documents/CogRob/avl/planning/gps_planner_nv/src/osm_planner/osm_example/ucsd-large.osm";
   gps_navigation::Map osm_map(osm_path);
+  gps_navigation::GpsBev osm_bev(osm_map.ways_, kOsmOriginX, kOsmOriginY, 5.0, 2);
   Node* point1;
   Node* point2;
   ros::Rate r(30);
