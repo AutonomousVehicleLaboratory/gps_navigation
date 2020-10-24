@@ -17,6 +17,7 @@ ros::Publisher gps_bev_pub;
 Node* ref_start = new Node;
 Node* gps_pose = new Node;
 bool gps_start = false;
+bool new_gps_msg = false;
 bool has_clicked_point = false;
 double lat_start = 0.0;
 double lon_start = 0.0;
@@ -32,6 +33,7 @@ void GpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg){
   if(!gps_start){
     gps_start = true;
   }
+  new_gps_msg = true;
   lat_start = msg->latitude;
   lon_start = msg->longitude;
 
@@ -167,11 +169,6 @@ int main(int argc, char **argv){
   ros::Rate r(30);
   
 
-  double lat2 = 32.88465; 
-  double lon2 = -117.24244;
-  double lat1 = 32.88184;
-  double lon1 = -117.23484; 
-  //gps_navigation::Map osm_map(osm_path);
   bool is_done = false;
   Node* point1_shortest; 
   Node* point2_shortest; 
@@ -185,13 +182,13 @@ int main(int argc, char **argv){
     }
     
     
-    if(gps_start && has_clicked_point ){
+    if((gps_start && has_clicked_point) || new_gps_msg){
       point1_shortest = osm_map.FindClosestNode(lat_start, lon_start); 
-      //point2_shortest = osm_map.FindClosestNode(lat1, lon1); 
       point2_shortest = osm_map.FindClosestNodeRelative(x_dest, y_dest, kOsmOriginX, kOsmOriginY); 
       plan = osm_map.ShortestPath(point1_shortest, point2_shortest); 
       is_done = true;
       has_clicked_point = false;
+      new_gps_msg = false;
       osm_map.osm_graph.ResetGraph(osm_map.navigation_nodes_);
     }
     if(is_done){

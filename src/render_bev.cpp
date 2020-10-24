@@ -87,7 +87,6 @@ namespace gps_navigation{
       } 
       
       // Paint new plan 
-      std::cout << "painting new plan" << std::endl;
       for(unsigned int i=0; i<plan.size()-1; i++){
         std::pair<double, double> seg_start = RelativeDisplacement(ref_start_, plan[i]);
         std::pair<double, double> seg_end = RelativeDisplacement(ref_start_, plan[i+1]);
