@@ -179,7 +179,7 @@ int main(int argc, char **argv){
   while(ros::ok()){
     nav_msgs::Path road_networks = visualize_network(osm_map.ways_, road_network_viz);
     if(gps_start){
-      cv::Mat local_osm_bev = osm_bev.RetrieveLocalBev(lat_start, lon_start, 100);
+      cv::Mat local_osm_bev = osm_bev.RetrieveLocalBev(lat_start, lon_start, plan, 200);
       sensor_msgs::ImagePtr local_osm_bev_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", local_osm_bev).toImageMsg();
       gps_bev_pub.publish(local_osm_bev_msg);    
     }
