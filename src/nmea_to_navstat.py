@@ -10,7 +10,7 @@ import pynmea2
 
 class GPSConverter():
 
-    rospy.init_node('semantic_publisher')
+    rospy.init_node('gps_converter')
     rate = rospy.Rate(10)
     navsat_pub = rospy.Publisher('/lat_lon', NavSatFix, queue_size=10)
     

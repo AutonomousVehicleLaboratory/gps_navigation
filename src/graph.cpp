@@ -76,8 +76,8 @@ namespace gps_navigation{
     int current_dist = 0;
     Node* current_node;
     std::priority_queue<Node*, std::vector<Node*>, NodeComp> pq;
-    std::cout << "Node1 graph_id: " << point1->graph_id << std::endl;
-    std::cout << "Node2 graph_id: " << point2->graph_id << std::endl;
+    //std::cout << "Node1 graph_id: " << point1->graph_id << std::endl;
+    //std::cout << "Node2 graph_id: " << point2->graph_id << std::endl;
     
     // Find shortest path using Dijkstra's algorithm from point1 to point2 
     point1->dist = 0;
@@ -91,7 +91,7 @@ namespace gps_navigation{
       // Check terminating condition: destination reached
       if(current_node->graph_id == point2->graph_id){
         
-        std::cout << "Found shortest path to osm_id: " << current_node->graph_id << std::endl;
+        //std::cout << "Found shortest path to osm_id: " << current_node->graph_id << std::endl;
         // Traverse from point2 backwards using prev_node pointer
         int p=0;
         while(current_node != NULL){

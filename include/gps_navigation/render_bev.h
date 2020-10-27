@@ -4,12 +4,28 @@
 #include <opencv2/imgproc.hpp>
 
 namespace gps_navigation{
+  struct EgoState;
+  struct EgoState{
+    // Measurements from IMU
+    double a_x, a_y, w_z;
+    
+    // Position/Bearing estimated from GPS
+    double x,y, bearing;
+    
+    // Velocities integrated from IMU
+    double v_x, v_y;
+    bool is_valid = false;
+  }; 
+
   class GpsBev{
     public:
       
       cv::Mat osm_map_;
       Node* ref_start_;
       Node* pose_;
+      
+      EgoState* ego_;      
+
       double min_x_;
       double min_y_;
       double max_x_;
@@ -23,8 +39,10 @@ namespace gps_navigation{
       unsigned int pix_y_;
       int road_thickness_;
       std::vector<Node*> prev_plan_;
+      GpsBev();
       GpsBev(std::vector<Way*> road_network, double origin_lat, double origin_lon, double res, int road_thickness);
-      cv::Mat RetrieveLocalBev(double lat, double lon, std::vector<Node*> plan, int region); 
+      double GetBearing(double lat, double lon);
+      cv::Mat RetrieveLocalBev(double lat, double lon, double a_x, double a_y, double w_z, double dt, std::vector<Node*> plan, int region); 
   };
 
 

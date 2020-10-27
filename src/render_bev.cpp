@@ -3,6 +3,7 @@
 #include <gps_navigation/utils.h>
 
 namespace gps_navigation{
+  GpsBev::GpsBev(){};
   GpsBev::GpsBev(std::vector<Way*> road_network, double origin_lat, double origin_lon, double res, int road_thickness){
  
     map_res_ = res;
@@ -13,6 +14,7 @@ namespace gps_navigation{
     max_y_ = 0;
     ref_start_ = new Node;
     pose_ = new Node;
+    ego_ = new EgoState;
     ref_start_->lat = origin_lat;
     ref_start_->lon = origin_lon;
 
@@ -57,13 +59,51 @@ namespace gps_navigation{
     }
     
   }
-  cv::Mat GpsBev::RetrieveLocalBev(double lat, double lon, std::vector<Node*> plan, int region){
+  double GpsBev::GetBearing(double lat, double lon){
+    double y = sin(lon - pose_->lon)*cos(lat);
+    double x = cos(pose_->lat)*sin(lat) -
+               sin(pose_->lat)*cos(lat)*cos(lon - pose_->lon);
+    double theta = atan2(y, x);
+    return (int)(theta*180/M_PI + 360) % 360;
+    //return theta*180/M_PI;
+  }
+  cv::Mat GpsBev::RetrieveLocalBev(double lat, double lon, double a_x, double a_y, double w_z, double dt, std::vector<Node*> plan, int region){
+    if(!ego_->is_valid){
+      ego_->is_valid = true;
+      ego_->a_x = a_x; 
+      ego_->a_y = a_y;
+      ego_->w_z = w_z;
+      ego_->v_x = a_x * dt; 
+      ego_->v_y = a_y * dt; 
+      pose_->lat = lat;
+      pose_->lon = lon;
+    }
+    
+    if(lat == pose_->lat){
+      //std::cout << "a_x: "<< a_x << " a_y: " << a_y << std::endl;
+      //std::cout << "w_z: "<< w_z << std::endl;
+      //std::cout << "dt: "<< dt << std::endl;
+      // use IMU to update position
+      ego_->x += ego_->v_x * dt + 0.5*a_x*dt*dt; 
+      ego_->y += ego_->v_y * dt + 0.5*a_y*dt*dt; 
+      
+      ego_->a_x = a_x; 
+      ego_->a_y = a_y;
+      ego_->w_z = w_z;
+      ego_->v_x = a_x * dt; 
+      ego_->v_y = a_y * dt; 
+    }
+    else{
+      double current_bearing = GetBearing(lat, lon);
+      //std::cout << "Bearing: " << current_bearing << std::endl;
+      std::pair<double, double> ego_pose = RelativeDisplacement(ref_start_, pose_);
+      ego_->x = ego_pose.first;
+      ego_->y = ego_pose.second;
+    } 
     pose_->lat = lat;
     pose_->lon = lon;
-    std::pair<double, double> ego_pose = RelativeDisplacement(ref_start_, pose_);
-    
-    unsigned int u_pose = (unsigned int)((ego_pose.first  + x_origin_) / map_res_); 
-    unsigned int v_pose = (unsigned int)((ego_pose.second + y_origin_) / map_res_);
+    unsigned int u_pose = (unsigned int)((ego_->x  + x_origin_) / map_res_); 
+    unsigned int v_pose = (unsigned int)((ego_->y + y_origin_) / map_res_);
     //cv::Mat local_bev = osm_map_(cv::Range(u_pose-region, u_pose+region), cv::Range(v_pose-region, v_pose+region));
     //cv::Mat local_bev = osm_map_(cv::Range(v_pose-(region/2), u_pose-(region/2)), cv::Range(region, region));
     

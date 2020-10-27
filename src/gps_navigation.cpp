@@ -2,6 +2,7 @@
 #include <gps_navigation/utils.h>
 
 namespace gps_navigation{
+  Map::Map(){}
   Map::Map(std::string map_path){
     // Read and Parse OSM XML format
     xml_map_ = TiXmlDocument(map_path);
@@ -173,7 +174,7 @@ namespace gps_navigation{
       }
       ++nodes_start;
     }
-    std::cout << "Node (" << shortest_node->graph_id << ")distance: " << shortest_distance << std::endl;
+    //std::cout << "Node (" << shortest_node->graph_id << ")distance: " << shortest_distance << std::endl;
     
     return shortest_node;
   }
@@ -197,7 +198,7 @@ namespace gps_navigation{
       }
       ++nodes_start;
     }
-    std::cout << "Relative Node (" << shortest_node->graph_id << ")distance: " << shortest_distance << std::endl;
+    //std::cout << "Relative Node (" << shortest_node->graph_id << ")distance: " << shortest_distance << std::endl;
     
     return shortest_node;
 
@@ -205,7 +206,7 @@ namespace gps_navigation{
 
   std::vector<Node*> Map::ShortestPath(Node* point1, Node* point2){
     //TODO
-    std::cout << "Starting Dijkstra" << std::endl;
+    //std::cout << "Starting Dijkstra" << std::endl;
     std::vector<Node*> traj;
     std::stack<Node*> traj_stack = osm_graph.Dijkstra(point1, point2);
     while(!traj_stack.empty()){

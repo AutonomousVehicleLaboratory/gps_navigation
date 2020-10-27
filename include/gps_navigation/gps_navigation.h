@@ -13,6 +13,7 @@
 namespace gps_navigation{
   class Map{
     public:
+      Map();
       Map(std::string map_path);
       TiXmlDocument xml_map_;
       TiXmlNode *osm_map_;
