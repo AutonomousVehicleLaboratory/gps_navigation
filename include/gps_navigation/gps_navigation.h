@@ -43,7 +43,11 @@ namespace gps_navigation{
   class Navigation{
     public:
       Navigation();
+      Navigation(std::string map_path, double origin_x, double origin_y);
+      Map* GetMap();
 
+    private:
+      Map* osm_map_;
     
   }; 
 }

@@ -229,5 +229,12 @@ namespace gps_navigation{
   }
 
   Navigation::Navigation(){};
+  Navigation::Navigation(std::string map_path, double origin_x, double origin_y){
+    osm_map_ = new Map(map_path);
+  }
 
+  Map* Navigation::GetMap(){
+    return osm_map_;
+  }
+  
 }

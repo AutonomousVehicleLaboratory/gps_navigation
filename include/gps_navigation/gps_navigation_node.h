@@ -43,7 +43,8 @@ namespace gps_navigation{
       ros::Subscriber clicked_point;
   
       // OSM Map
-      Map* osm_map;
+      //Map* osm_map;
+      Navigation* gps_navigator;
       GpsBev* osm_bev;
       nav_msgs::Path road_networks;
       cv::Mat local_osm_bev;

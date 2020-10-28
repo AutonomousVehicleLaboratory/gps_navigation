@@ -14,9 +14,10 @@ namespace gps_navigation{
     
     // Initialize map
     std::string osm_path = "/home/dfpazr/Documents/CogRob/avl/planning/gps_planner_nv/src/osm_planner/osm_example/ucsd-large.osm";
-    osm_map = new Map(osm_path);
+    //osm_map = new Map(osm_path);
+    gps_navigator = new Navigation(osm_path, kOsmOriginX, kOsmOriginY);
     //osm_bev = new GpsBev(osm_map->ways_, kOsmOriginX, kOsmOriginY, 0.5, 2, 200);
-    osm_bev = new GpsBev(osm_map->GetWays(), kOsmOriginX, kOsmOriginY, 0.5, 2, 200);
+    osm_bev = new GpsBev(gps_navigator->GetMap()->GetWays(), kOsmOriginX, kOsmOriginY, 0.5, 2, 200);
   
   }
   void GpsNavigationNode::ClickedPointCallback(const geometry_msgs::PoseStamped::ConstPtr& msg){
@@ -81,16 +82,16 @@ namespace gps_navigation{
     }
     if((gps_avail && has_clicked_point) || new_gps_msg){
       // Closest node wrt position of ego vehicle
-      point1_shortest = osm_map->FindClosestNode(lat_pose, lon_pose);
+      point1_shortest = gps_navigator->GetMap()->FindClosestNode(lat_pose, lon_pose);
       // Destination point manually set
-      point2_shortest = osm_map->FindClosestNodeRelative(x_dest, y_dest, kOsmOriginX, kOsmOriginY);
-      plan = osm_map->ShortestPath(point1_shortest, point2_shortest);
+      point2_shortest = gps_navigator->GetMap()->FindClosestNodeRelative(x_dest, y_dest, kOsmOriginX, kOsmOriginY);
+      plan = gps_navigator->GetMap()->ShortestPath(point1_shortest, point2_shortest);
       new_plan = true;
       has_clicked_point = false;
       
       new_gps_msg = false;
       //osm_map->osm_graph_.ResetGraph(osm_map->navigation_nodes_);
-      osm_map->ResetPlan();
+      gps_navigator->GetMap()->ResetPlan();
     }
     
     if(new_plan){
@@ -189,17 +190,17 @@ namespace gps_navigation{
     
     int counter = 0;
     ros::Time current_time = ros::Time::now();
-    for (unsigned int i=0; i<osm_map->GetWays().size(); i++){ 
+    for (unsigned int i=0; i<gps_navigator->GetMap()->GetWays().size(); i++){ 
       road_network.poses.clear();
       current_time = ros::Time::now();
-      for (unsigned int j=0; j<osm_map->GetWays()[i]->nodes.size(); j++){
-        std::pair<double, double> dx_dy = RelativeDisplacement(ref_start, osm_map->GetWays()[i]->nodes[j]);
+      for (unsigned int j=0; j<gps_navigator->GetMap()->GetWays()[i]->nodes.size(); j++){
+        std::pair<double, double> dx_dy = RelativeDisplacement(ref_start, gps_navigator->GetMap()->GetWays()[i]->nodes[j]);
         // Accumulate orientation markers
         // Estimate quaternion representation
-        if((osm_map->GetWays()[i]->nodes[j]->dx_dy.first != 0) && 
-           (osm_map->GetWays()[i]->nodes[j]->dx_dy.second != 0) &&
-           (osm_map->GetWays()[i]->one_way)){
-          double yaw = atan2(osm_map->GetWays()[i]->nodes[j]->dx_dy.second, osm_map->GetWays()[i]->nodes[j]->dx_dy.first);
+        if((gps_navigator->GetMap()->GetWays()[i]->nodes[j]->dx_dy.first != 0) && 
+           (gps_navigator->GetMap()->GetWays()[i]->nodes[j]->dx_dy.second != 0) &&
+           (gps_navigator->GetMap()->GetWays()[i]->one_way)){
+          double yaw = atan2(gps_navigator->GetMap()->GetWays()[i]->nodes[j]->dx_dy.second, gps_navigator->GetMap()->GetWays()[i]->nodes[j]->dx_dy.first);
           current_direction = GetMarker(1, counter, current_time, dx_dy.first, dx_dy.second, 0.0, yaw);
         }
         else{
