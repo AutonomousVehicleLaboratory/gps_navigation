@@ -10,17 +10,21 @@ namespace gps_navigation{
     double a_x, a_y, w_z;
     
     // Position/Bearing estimated from GPS
-    double x,y, bearing;
+    double x,y, bearing, prev_bearing;
+    Node* pose;
     
     // Velocities integrated from IMU
     double v_x, v_y;
-    bool is_valid = false;
+    bool pose_init = false;
+    bool bearing_init = false;
+    bool gps_is_valid = false;
   }; 
 
   class GpsBev{
     public:
       
       cv::Mat osm_map_;
+      cv::Mat default_map_;
       Node* ref_start_;
       Node* pose_;
       
@@ -40,9 +44,9 @@ namespace gps_navigation{
       int road_thickness_;
       std::vector<Node*> prev_plan_;
       GpsBev();
-      GpsBev(std::vector<Way*> road_network, double origin_lat, double origin_lon, double res, int road_thickness);
+      GpsBev(std::vector<Way*> road_network, double origin_lat, double origin_lon, double res, int road_thickness, int local_bev_dim);
       double GetBearing(double lat, double lon);
-      cv::Mat RetrieveLocalBev(double lat, double lon, double a_x, double a_y, double w_z, double dt, std::vector<Node*> plan, int region); 
+      cv::Mat RetrieveLocalBev(double lat, double lon, double v, double a_x, double a_y, double w_z, double dt, std::vector<Node*> plan, int region); 
   };
 
 

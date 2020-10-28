@@ -8,12 +8,13 @@ namespace gps_navigation{
     gps_bev_pub = n.advertise<sensor_msgs::Image>("/osm_bev", 1000);
     gps_pose_sub = n.subscribe("/lat_lon", 1000, &GpsNavigationNode::GpsCallback, this);
     imu_sub = n.subscribe("/livox/imu", 1000, &GpsNavigationNode::ImuCallback, this);
+    speed_sub = n.subscribe("/pacmod/as_tx/vehicle_speed", 1000, &GpsNavigationNode::SpeedCallback, this);
     clicked_point = n.subscribe("/move_base_simple/goal", 1000, &GpsNavigationNode::ClickedPointCallback, this);
     
     // Initialize map
     std::string osm_path = "/home/dfpazr/Documents/CogRob/avl/planning/gps_planner_nv/src/osm_planner/osm_example/ucsd-large.osm";
     osm_map = new Map(osm_path);
-    osm_bev = new GpsBev(osm_map->ways_, kOsmOriginX, kOsmOriginY, 0.5, 2);
+    osm_bev = new GpsBev(osm_map->ways_, kOsmOriginX, kOsmOriginY, 0.5, 2, 200);
   
   }
   void GpsNavigationNode::ClickedPointCallback(const geometry_msgs::PoseStamped::ConstPtr& msg){
@@ -58,31 +59,32 @@ namespace gps_navigation{
   
   void GpsNavigationNode::ImuCallback(const sensor_msgs::Imu::ConstPtr& msg){
     //road_networks = VisualizeNetwork();
+    twist.angular_velocity = msg->angular_velocity;
+    twist.linear_acceleration = msg->linear_acceleration;
+    twist.header = msg->header;
     if(!imu_avail || !gps_avail){
-      twist.angular_velocity = msg->angular_velocity;
-      twist.linear_acceleration = msg->linear_acceleration;
-      twist.header = msg->header;
       imu_avail = true;
       return; 
     }
-    //if(gps_avail && imu_avail){
-    //  ros::Duration dt = ros::Time::now() - twist.header.stamp;
-    //  cv::Mat local_osm_bev = osm_bev->RetrieveLocalBev(lat_pose, lon_pose,
-    //                                                   twist.linear_acceleration.x,
-    //                                                   twist.linear_acceleration.y,
-    //                                                   twist.angular_velocity.z,
-    //                                                   dt.toSec(), plan, 200);
-    //  sensor_msgs::ImagePtr local_osm_bev_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", local_osm_bev).toImageMsg();
-    //  gps_bev_pub.publish(local_osm_bev_msg);
-    //}
-    if(gps_avail && has_clicked_point){
+    if(gps_avail && imu_avail){
+      ros::Duration dt = ros::Time::now() - twist.header.stamp;
+      cv::Mat local_osm_bev = osm_bev->RetrieveLocalBev(lat_pose, lon_pose,
+                                                       ego_speed,
+                                                       twist.linear_acceleration.x,
+                                                       twist.linear_acceleration.y,
+                                                       twist.angular_velocity.z,
+                                                       dt.toSec(), plan, 200);
+      sensor_msgs::ImagePtr local_osm_bev_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", local_osm_bev).toImageMsg();
+      gps_bev_pub.publish(local_osm_bev_msg);
+    }
+    if((gps_avail && has_clicked_point) || new_gps_msg){
       point1_shortest = osm_map->FindClosestNode(lat_pose, lon_pose);
       point2_shortest = osm_map->FindClosestNodeRelative(x_dest, y_dest, kOsmOriginX, kOsmOriginY);
       plan = osm_map->ShortestPath(point1_shortest, point2_shortest);
       new_plan = true;
       has_clicked_point = false;
       
-      //new_gps_msg = false;
+      new_gps_msg = false;
       osm_map->osm_graph.ResetGraph(osm_map->navigation_nodes_);
     }
     
@@ -91,6 +93,9 @@ namespace gps_navigation{
       shortest_path_viz.publish(shortest_path);
     } 
     return; 
+  }
+  void GpsNavigationNode::SpeedCallback(const std_msgs::Float64::ConstPtr& msg){
+    ego_speed = msg->data;
   }
   visualization_msgs::Marker GpsNavigationNode::visualize_waypoints(std::vector<Node*> path){
     visualization_msgs::Marker path_viz;
