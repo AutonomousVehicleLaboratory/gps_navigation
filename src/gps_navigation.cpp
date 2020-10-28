@@ -18,8 +18,8 @@ namespace gps_navigation{
     ParseMap();    
     std::cout << " Parsed map" << std::endl;
     // Define OSM graph
-    osm_graph = OsmGraph();
-    osm_graph.Generate(ways_, navigation_nodes_);
+    osm_graph_ = OsmGraph();
+    osm_graph_.Generate(ways_, navigation_nodes_);
     
   }
 
@@ -208,7 +208,7 @@ namespace gps_navigation{
     //TODO
     //std::cout << "Starting Dijkstra" << std::endl;
     std::vector<Node*> traj;
-    std::stack<Node*> traj_stack = osm_graph.Dijkstra(point1, point2);
+    std::stack<Node*> traj_stack = osm_graph_.Dijkstra(point1, point2);
     while(!traj_stack.empty()){
       //if(traj_stack.top()->osm_id != -1){ 
       //  std::cout << "node: " << traj_stack.top()->graph_id << " | " << traj_stack.top()->graph_id << std::endl;
@@ -218,4 +218,16 @@ namespace gps_navigation{
     }
     return traj;
   }
+  std::vector<Way*> Map::GetWays(){
+    return ways_;
+  }
+  //std::vector<Node*> Map::GetNavigationNodes(){
+  //  return navigation_nodes_;
+  //}
+  void Map::ResetPlan(){
+    osm_graph_.ResetGraph(navigation_nodes_);
+  }
+
+  Navigation::Navigation(){};
+
 }

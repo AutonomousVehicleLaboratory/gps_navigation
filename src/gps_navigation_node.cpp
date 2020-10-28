@@ -15,7 +15,8 @@ namespace gps_navigation{
     // Initialize map
     std::string osm_path = "/home/dfpazr/Documents/CogRob/avl/planning/gps_planner_nv/src/osm_planner/osm_example/ucsd-large.osm";
     osm_map = new Map(osm_path);
-    osm_bev = new GpsBev(osm_map->ways_, kOsmOriginX, kOsmOriginY, 0.5, 2, 200);
+    //osm_bev = new GpsBev(osm_map->ways_, kOsmOriginX, kOsmOriginY, 0.5, 2, 200);
+    osm_bev = new GpsBev(osm_map->GetWays(), kOsmOriginX, kOsmOriginY, 0.5, 2, 200);
   
   }
   void GpsNavigationNode::ClickedPointCallback(const geometry_msgs::PoseStamped::ConstPtr& msg){
@@ -79,14 +80,17 @@ namespace gps_navigation{
       gps_bev_pub.publish(local_osm_bev_msg);
     }
     if((gps_avail && has_clicked_point) || new_gps_msg){
+      // Closest node wrt position of ego vehicle
       point1_shortest = osm_map->FindClosestNode(lat_pose, lon_pose);
+      // Destination point manually set
       point2_shortest = osm_map->FindClosestNodeRelative(x_dest, y_dest, kOsmOriginX, kOsmOriginY);
       plan = osm_map->ShortestPath(point1_shortest, point2_shortest);
       new_plan = true;
       has_clicked_point = false;
       
       new_gps_msg = false;
-      osm_map->osm_graph.ResetGraph(osm_map->navigation_nodes_);
+      //osm_map->osm_graph_.ResetGraph(osm_map->navigation_nodes_);
+      osm_map->ResetPlan();
     }
     
     if(new_plan){
@@ -98,38 +102,51 @@ namespace gps_navigation{
   void GpsNavigationNode::SpeedCallback(const std_msgs::Float64::ConstPtr& msg){
     ego_speed = msg->data;
   }
-  visualization_msgs::Marker GpsNavigationNode::visualize_waypoints(std::vector<Node*> path){
-    visualization_msgs::Marker path_viz;
-    path_viz.header.frame_id = "/map";
-    path_viz.header.stamp = ros::Time::now();
-    path_viz.ns = "points_and_lines";
-    path_viz.id = 0;
-    path_viz.type = visualization_msgs::Marker::POINTS;
-    path_viz.action = visualization_msgs::Marker::ADD;
-    path_viz.color.g = 1.0f;
-    path_viz.color.a = 1.0;
-    path_viz.scale.x = 6.2;
-    path_viz.scale.y = 6.2;
-     
-    Node ref_start;
-    ref_start.lat = kOsmOriginX;
-    ref_start.lon = kOsmOriginY;
-    
-    //ros::Time current_time = ros::Time::now(); 
-    for (unsigned int i=0; i<path.size(); i++){
-      geometry_msgs::Point current_pose;
-      std::pair<double, double> dx_dy = RelativeDisplacement(&ref_start, path[i]);
-      current_pose.x = dx_dy.first;
-      current_pose.y = dx_dy.second;
-      current_pose.z = 0.0;
-      
-      path_viz.points.push_back(current_pose);
-       
-    }
-    //road_network.header.stamp = current_time;
-    return path_viz; 
-  }
   
+  visualization_msgs::Marker GpsNavigationNode::GetMarker(int marker_type, long id, ros::Time ts, double x, double y, double z, double yaw){
+    visualization_msgs::Marker marker;
+    marker.id = id;
+    marker.header.frame_id = "map";
+    marker.header.seq = id;
+    marker.header.stamp = ts;
+    marker.action = visualization_msgs::Marker::ADD;
+    tf2::Quaternion node_q;
+
+    marker.pose.position.x = x;
+    marker.pose.position.y = y;
+    marker.pose.position.z = z;
+    if(marker_type == 0){
+      marker.scale.x = 1.0;
+      marker.scale.y = 1.0;
+      marker.scale.z = 1.0;
+      marker.color.a = 1.0;
+      marker.color.r = 0.0;
+      marker.color.g = 1.0;
+      marker.color.b = 0.0;
+      marker.pose.orientation.x = 0.0;
+      marker.pose.orientation.y = 0.0;
+      marker.pose.orientation.z = 0.0;
+      marker.pose.orientation.w = 1.0;
+      marker.type = visualization_msgs::Marker::SPHERE;
+    }
+    else if(marker_type == 1){
+      marker.scale.x = 1.0;
+      marker.scale.y = 0.5;
+      marker.scale.z = 0.5;
+      marker.color.a = 1.0;
+      marker.color.r = 0.74;
+      marker.color.g = 0.2;
+      marker.color.b = 0.92;
+      node_q.setRPY(0.0, 0.0, yaw);  
+      marker.pose.orientation.x = node_q[0];
+      marker.pose.orientation.y = node_q[1];
+      marker.pose.orientation.z = node_q[2];
+      marker.pose.orientation.w = node_q[3];
+      marker.type = visualization_msgs::Marker::ARROW;
+      
+    }
+    return marker;
+  }
   nav_msgs::Path GpsNavigationNode::VisualizePath(std::vector<Node*> path){
     nav_msgs::Path road_network;
     road_network.header.frame_id = "map";
@@ -159,7 +176,6 @@ namespace gps_navigation{
   nav_msgs::Path GpsNavigationNode::VisualizeNetwork(){
     nav_msgs::Path road_network;
     //visualization_msgs::MarkerArray node_directions;
-    tf2::Quaternion node_q;
     visualization_msgs::Marker current_direction;
     current_direction.action = visualization_msgs::Marker::ADD;
     
@@ -173,53 +189,25 @@ namespace gps_navigation{
     
     int counter = 0;
     ros::Time current_time = ros::Time::now();
-    for (unsigned int i=0; i<osm_map->ways_.size(); i++){ 
+    for (unsigned int i=0; i<osm_map->GetWays().size(); i++){ 
       road_network.poses.clear();
       current_time = ros::Time::now();
-      for (unsigned int j=0; j<osm_map->ways_[i]->nodes.size(); j++){
-        std::pair<double, double> dx_dy = RelativeDisplacement(ref_start, osm_map->ways_[i]->nodes[j]);
+      for (unsigned int j=0; j<osm_map->GetWays()[i]->nodes.size(); j++){
+        std::pair<double, double> dx_dy = RelativeDisplacement(ref_start, osm_map->GetWays()[i]->nodes[j]);
         // Accumulate orientation markers
-        current_direction.pose.position.x = dx_dy.first;
-        current_direction.pose.position.y = dx_dy.second;
-        current_direction.pose.position.z = 0.0;
         // Estimate quaternion representation
-        current_direction.scale.x = 1.0;
-        current_direction.scale.y = 1.0;
-        current_direction.scale.z = 1.0;
-        current_direction.color.a = 1.0;
-        current_direction.color.r = 0.0;
-        current_direction.color.g = 1.0;
-        current_direction.color.b = 0.0;
-        current_direction.pose.orientation.x = 0.0;
-        current_direction.pose.orientation.y = 0.0;
-        current_direction.pose.orientation.z = 0.0;
-        current_direction.pose.orientation.w = 1.0;
-        current_direction.type = visualization_msgs::Marker::SPHERE;
-        if((osm_map->ways_[i]->nodes[j]->dx_dy.first != 0) && 
-           (osm_map->ways_[i]->nodes[j]->dx_dy.second != 0) &&
-           (osm_map->ways_[i]->one_way)){
-          double yaw = atan2(osm_map->ways_[i]->nodes[j]->dx_dy.second, osm_map->ways_[i]->nodes[j]->dx_dy.first);
-          node_q.setRPY(0.0, 0.0, yaw);  
-          current_direction.scale.x = 1.0;
-          current_direction.scale.y = 0.5;
-          current_direction.scale.z = 0.5;
-          current_direction.color.a = 1.0;
-          current_direction.color.r = 0.74;
-          current_direction.color.g = 0.2;
-          current_direction.color.b = 0.92;
-          current_direction.pose.orientation.x = node_q[0];
-          current_direction.pose.orientation.y = node_q[1];
-          current_direction.pose.orientation.z = node_q[2];
-          current_direction.pose.orientation.w = node_q[3];
-          current_direction.type = visualization_msgs::Marker::ARROW;
+        if((osm_map->GetWays()[i]->nodes[j]->dx_dy.first != 0) && 
+           (osm_map->GetWays()[i]->nodes[j]->dx_dy.second != 0) &&
+           (osm_map->GetWays()[i]->one_way)){
+          double yaw = atan2(osm_map->GetWays()[i]->nodes[j]->dx_dy.second, osm_map->GetWays()[i]->nodes[j]->dx_dy.first);
+          current_direction = GetMarker(1, counter, current_time, dx_dy.first, dx_dy.second, 0.0, yaw);
         }
-        current_direction.id = counter;
-        current_direction.header.frame_id = "map";
-        current_direction.header.seq = counter;
-        current_direction.header.stamp = current_time;
+        else{
+          current_direction = GetMarker(0, counter, current_time, dx_dy.first, dx_dy.second, 0.0, 0);
+        }
         //node_directions.markers.push_back(current_direction);
         
-        // Publish road network segment
+        // Create road network segment
         current_pose.pose.position.x = dx_dy.first;
         current_pose.pose.position.y = dx_dy.second;
         current_pose.pose.position.z = 0.0;
