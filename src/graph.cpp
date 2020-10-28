@@ -14,7 +14,14 @@ namespace gps_navigation{
         int end_node_id = ways[i]->nodes[j+1]->graph_id;
         auto start_node = node_table.find(start_node_id);
         auto end_node = node_table.find(end_node_id);
+        // Calculate the distance between nodes
         double dist = GreatCircleDistance(start_node->second, end_node->second);
+        // Estimate dx, dy for second node 
+        std::pair<double, double> dx_dy = RelativeDisplacement(start_node->second, end_node->second);
+        double dx_dy_norm = sqrt(dx_dy.first*dx_dy.first + dx_dy.second*dx_dy.second);
+        dx_dy.first /= dx_dy_norm; 
+        dx_dy.second /= dx_dy_norm;
+        end_node->second->dx_dy = dx_dy; 
         
         if(start_node->second == NULL || end_node->second == NULL){
           std::cout << "NOT FOUND-----------------" << std::endl;

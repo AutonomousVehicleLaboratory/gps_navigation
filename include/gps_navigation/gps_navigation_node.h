@@ -1,6 +1,7 @@
 #ifndef GPS_NAV_NODE
 #define GPS_NAV_NODE
 #include "ros/ros.h"
+#include <tf2/LinearMath/Quaternion.h>
 #include <gps_navigation/gps_navigation.h>
 #include <gps_navigation/graph.h>
 #include <gps_navigation/utils.h>
@@ -8,6 +9,7 @@
 #include <vector>
 #include <nav_msgs/Path.h>
 #include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/Imu.h>
@@ -31,6 +33,7 @@ namespace gps_navigation{
       ros::NodeHandle n;
       ros::Publisher shortest_path_viz;
       ros::Publisher road_network_viz;
+      ros::Publisher node_orientation_viz;
       ros::Publisher gps_viz_pub;
       ros::Publisher gps_bev_pub;
   

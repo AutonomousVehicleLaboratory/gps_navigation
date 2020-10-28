@@ -17,7 +17,10 @@ namespace gps_navigation{
     double lon;
     Edge* edges = NULL;
 
-    /* For graph search */
+    // Orientation
+    std::pair<double, double> dx_dy = std::make_pair(0.0, 0.0);
+
+    // For graph search 
     double dist = INFINITY; 
     Node* prev_node = NULL; //node that last updated dist
     bool visited = false;

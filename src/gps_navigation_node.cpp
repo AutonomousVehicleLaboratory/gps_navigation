@@ -4,6 +4,7 @@ namespace gps_navigation{
   GpsNavigationNode::GpsNavigationNode(){
     shortest_path_viz = n.advertise<nav_msgs::Path>("/shortest_path", 1000);
     road_network_viz = n.advertise<nav_msgs::Path>("/road_network", 1000);
+    node_orientation_viz = n.advertise<visualization_msgs::Marker>("/node_orientations", 1000);
     gps_viz_pub = n.advertise<visualization_msgs::Marker>("/gps_pose", 1000);
     gps_bev_pub = n.advertise<sensor_msgs::Image>("/osm_bev", 1000);
     gps_pose_sub = n.subscribe("/lat_lon", 1000, &GpsNavigationNode::GpsCallback, this);
@@ -157,6 +158,12 @@ namespace gps_navigation{
   
   nav_msgs::Path GpsNavigationNode::VisualizeNetwork(){
     nav_msgs::Path road_network;
+    //visualization_msgs::MarkerArray node_directions;
+    tf2::Quaternion node_q;
+    visualization_msgs::Marker current_direction;
+    current_direction.action = visualization_msgs::Marker::ADD;
+    
+
     road_network.header.frame_id = "map";
     geometry_msgs::PoseStamped current_pose;
     
@@ -171,6 +178,48 @@ namespace gps_navigation{
       current_time = ros::Time::now();
       for (unsigned int j=0; j<osm_map->ways_[i]->nodes.size(); j++){
         std::pair<double, double> dx_dy = RelativeDisplacement(ref_start, osm_map->ways_[i]->nodes[j]);
+        // Accumulate orientation markers
+        current_direction.pose.position.x = dx_dy.first;
+        current_direction.pose.position.y = dx_dy.second;
+        current_direction.pose.position.z = 0.0;
+        // Estimate quaternion representation
+        current_direction.scale.x = 1.0;
+        current_direction.scale.y = 1.0;
+        current_direction.scale.z = 1.0;
+        current_direction.color.a = 1.0;
+        current_direction.color.r = 0.0;
+        current_direction.color.g = 1.0;
+        current_direction.color.b = 0.0;
+        current_direction.pose.orientation.x = 0.0;
+        current_direction.pose.orientation.y = 0.0;
+        current_direction.pose.orientation.z = 0.0;
+        current_direction.pose.orientation.w = 1.0;
+        current_direction.type = visualization_msgs::Marker::SPHERE;
+        if((osm_map->ways_[i]->nodes[j]->dx_dy.first != 0) && 
+           (osm_map->ways_[i]->nodes[j]->dx_dy.second != 0) &&
+           (osm_map->ways_[i]->one_way)){
+          double yaw = atan2(osm_map->ways_[i]->nodes[j]->dx_dy.second, osm_map->ways_[i]->nodes[j]->dx_dy.first);
+          node_q.setRPY(0.0, 0.0, yaw);  
+          current_direction.scale.x = 1.0;
+          current_direction.scale.y = 0.5;
+          current_direction.scale.z = 0.5;
+          current_direction.color.a = 1.0;
+          current_direction.color.r = 0.74;
+          current_direction.color.g = 0.2;
+          current_direction.color.b = 0.92;
+          current_direction.pose.orientation.x = node_q[0];
+          current_direction.pose.orientation.y = node_q[1];
+          current_direction.pose.orientation.z = node_q[2];
+          current_direction.pose.orientation.w = node_q[3];
+          current_direction.type = visualization_msgs::Marker::ARROW;
+        }
+        current_direction.id = counter;
+        current_direction.header.frame_id = "map";
+        current_direction.header.seq = counter;
+        current_direction.header.stamp = current_time;
+        //node_directions.markers.push_back(current_direction);
+        
+        // Publish road network segment
         current_pose.pose.position.x = dx_dy.first;
         current_pose.pose.position.y = dx_dy.second;
         current_pose.pose.position.z = 0.0;
@@ -178,6 +227,8 @@ namespace gps_navigation{
         current_pose.header.frame_id = "map";
         current_pose.header.stamp = current_time;
         road_network.poses.push_back(current_pose);
+
+        node_orientation_viz.publish(current_direction);
         ++counter; 
       }
       road_network_viz.publish(road_network);
