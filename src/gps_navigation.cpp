@@ -24,7 +24,6 @@ namespace gps_navigation{
   }
 
   std::vector<Node*> Map::ExtractNodes(int start_node_id, int end_node_id){
-    //TODO: verify
     auto start_node = nodes_.find(start_node_id);
     auto end_node = nodes_.find(end_node_id);
     double dist = GreatCircleDistance(start_node->second, end_node->second);
@@ -95,10 +94,10 @@ namespace gps_navigation{
           is_oneway = true;
           //std::cout << "found a oneway road" << std::endl;
         }
-        if( k == "highway" && v == "unclassified" ||
-            k == "highway" && v == "service" ||
-            k == "highway" && v == "tertiary" ||
-            k == "highway" && v == "residential") {
+        if( (k == "highway" && v == "unclassified") ||
+            (k == "highway" && v == "service") ||
+            (k == "highway" && v == "tertiary") ||
+            (k == "highway" && v == "residential")) {
           //std::cout << "found way: " << way_id << std::endl;
           way_valid = true;
            
@@ -205,36 +204,158 @@ namespace gps_navigation{
   }
 
   std::vector<Node*> Map::ShortestPath(Node* point1, Node* point2){
-    //TODO
     //std::cout << "Starting Dijkstra" << std::endl;
     std::vector<Node*> traj;
     std::stack<Node*> traj_stack = osm_graph_.Dijkstra(point1, point2);
     while(!traj_stack.empty()){
-      //if(traj_stack.top()->osm_id != -1){ 
-      //  std::cout << "node: " << traj_stack.top()->graph_id << " | " << traj_stack.top()->graph_id << std::endl;
-      //}
       traj.push_back(traj_stack.top());
       traj_stack.pop();
     }
     return traj;
-  }
-  std::vector<Way*> Map::GetWays(){
+  } std::vector<Way*> Map::GetWays(){
     return ways_;
   }
-  //std::vector<Node*> Map::GetNavigationNodes(){
-  //  return navigation_nodes_;
-  //}
   void Map::ResetPlan(){
     osm_graph_.ResetGraph(navigation_nodes_);
   }
 
   Navigation::Navigation(){};
-  Navigation::Navigation(std::string map_path, double origin_x, double origin_y){
+  Navigation::Navigation(std::string map_path, double lat_origin, double lon_origin){
+    lat_origin_ = lat_origin;
+    lon_origin_ = lon_origin;
+    ref_origin_ = new Node;
+    ref_origin_->lat = lat_origin; 
+    ref_origin_->lon = lon_origin; 
     osm_map_ = new Map(map_path);
+    //state_.pose = new Node;
   }
 
   Map* Navigation::GetMap(){
     return osm_map_;
   }
+  void Navigation::SetStart(double lat, double lon){
+    state_.pose.lat = lat;
+    state_.pose.lon = lon;
+    start_node_ = osm_map_->FindClosestNode(lat, lon);
+    std::pair<double, double> x_y = RelativeDisplacement(ref_origin_, start_node_);
+    //std::pair<double, double> x_y = RelativeDisplacement(ref_origin_, state_.pose);
+    state_.x_ego = x_y.first;
+    state_.y_ego = x_y.second;
+    next_node_index_ = 0;
+    nearest_gps_node_ = start_node_;
+  }
+  void Navigation::SetTarget(double lat, double lon){
+    end_node_ = osm_map_->FindClosestNode(lat, lon);
+  }
+  void Navigation::SetTargetRelative(double x_dest, double y_dest){
+    end_node_ = osm_map_->FindClosestNodeRelative(x_dest, y_dest, lat_origin_, lon_origin_);
+  }
+  void Navigation::ResetPlan(){
+    osm_map_->ResetPlan();
+  } 
+  std::vector<Node*> Navigation::Plan(){
+    current_plan_ = osm_map_->ShortestPath(start_node_, end_node_);
+    next_node_index_ = 0;
+    return current_plan_;
+  }
+  std::pair<int, Node*> Navigation::FindClosestPlannedNode(){
+    double closest_distance = INFINITY;
+    double current_distance = INFINITY;
+    std::pair<int, Node*> closest_node;
+    
+    for(unsigned int i=0; i<current_plan_.size(); i++){
+      std::pair<double, double> dx_dy = RelativeDisplacement(&state_.pose, current_plan_[i]);
+      current_distance = sqrt(dx_dy.first*dx_dy.first + dx_dy.second*dx_dy.second);
+      if(current_distance < closest_distance){
+        closest_distance = current_distance;
+        closest_node.first = i;
+        closest_node.second = current_plan_[i];
+      }
+    }
+    return closest_node; 
+  }
+  std::tuple<bool, long, double, double, double> Navigation::UpdateState(double lat, double lon, double v, double w_z, double a_x, double t){
+    std::tuple<bool, long, double, double, double> current_state{false, 0, 0.0, 0.0, -1.0};
+    //std::tuple<bool, double, double, double> current_state};
+    if(t_prev_ == -1.0){
+      t_prev_ = t;
+      state_.a_x = a_x;
+      state_.w_z = w_z;
+      state_.v = v;
+      // Set initial position/orientation of ego vehicle
+      if(current_plan_.size() > 1){
+        std::pair<double, double> dx_dy = RelativeDisplacement(current_plan_[next_node_index_], 
+                                                               current_plan_[next_node_index_+1]);
+        //double dx_dy_norm = sqrt(dx_dy.first*dx_dy.first + dx_dy.second*dx_dy.second);
+        state_.yaw_ego = atan2(start_node_->dx_dy.second, start_node_->dx_dy.first);
+        state_.prev_yaw_ego = state_.yaw_ego;
+        state_.pose.lat = lat;
+        state_.pose.lon = lon;
+        // Node and position of planned node closest to ego vehicle
+        state_.pose = *current_plan_[next_node_index_];
+        std::pair<double, double> x_y_node = RelativeDisplacement(ref_origin_, &state_.pose);
+        state_.x_ego = x_y_node.first;
+        state_.y_ego = x_y_node.second;
+        //std::pair<int, Node*> planned_node = FindClosestPlannedNode();
+      }
+
+      return current_state; 
+    }
+      
+    // If a new gps measurement is received
+    if(lat != state_.pose.lat){
+      state_.pose.lat = lat;
+      state_.pose.lon = lon;
+      // Node and position of planned node closest to ego vehicle
+      std::pair<double, double> x_y_ego = RelativeDisplacement(ref_origin_, &state_.pose);
+
+      // Define condition to set position/orientation using gps or imu
+      // If closest node to ego is x meters past its threshold, update x_ego, y_ego and angles, else set flag for imu
+      double dist_diff = sqrt((x_y_ego.first - state_.x_ego)*(x_y_ego.first - state_.x_ego) + 
+                              (x_y_ego.second - state_.y_ego)*(x_y_ego.second - state_.y_ego));
+      
+      // If the new gps location is too far from previously expected 
+      if(dist_diff >= 2.0){
+        // If this node does not contain orientation information
+        // TODO: or use IMU
+        if((start_node_->dx_dy.first == 0) && (start_node_->dx_dy.second == 0)){
+          return current_state;
+        }
+        // Set position based on planned node closest to ego vehicle
+        std::pair<int, Node*> planned_node = FindClosestPlannedNode();
+        if(planned_node.first == current_plan_.size()-1){
+          return current_state;
+        }
+        if(planned_node.second == NULL){
+          std::cout << "null" << std::endl;
+        } 
+        std::pair<double, double> x_y_node = RelativeDisplacement(ref_origin_, planned_node.second);
+        next_node_index_ = planned_node.first;
+        start_node_ = planned_node.second;
+        state_.x_ego = x_y_node.first;
+        state_.y_ego = x_y_node.second;
+        state_.prev_yaw_ego = state_.yaw_ego;
+        // Set orientation
+        std::cout << "i: " << next_node_index_ << " len: " << current_plan_.size() << std::endl;
+        std::pair<double, double> dx_dy = RelativeDisplacement(current_plan_[next_node_index_], 
+                                                               current_plan_[next_node_index_+1]);
+        double dx_dy_norm = sqrt(dx_dy.first*dx_dy.first + dx_dy.second*dx_dy.second);
+        // TODO: use imu for drastic changes in orientation
+        state_.prev_yaw_ego = state_.yaw_ego;
+        state_.yaw_ego = atan2(start_node_->dx_dy.second, start_node_->dx_dy.first);
+        current_state = std::make_tuple(true, next_node_index_, state_.x_ego, state_.y_ego, state_.yaw_ego); 
+        return current_state;
+      }
+
+    }
+    //else{
+    //  // TODO: Use IMU to update position 
+    //  
+    //}
+     
+  
+  } 
+  
+   
   
 }

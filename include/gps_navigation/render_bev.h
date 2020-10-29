@@ -2,8 +2,10 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include <gps_navigation/gps_navigation.h>
 
 namespace gps_navigation{
+  /*
   struct EgoState;
   struct EgoState{
     // Measurements from IMU
@@ -19,7 +21,7 @@ namespace gps_navigation{
     bool bearing_init = false;
     bool gps_is_valid = false;
   }; 
-
+  */
   class GpsBev{
     public:
       
@@ -46,7 +48,7 @@ namespace gps_navigation{
       GpsBev();
       GpsBev(std::vector<Way*> road_network, double origin_lat, double origin_lon, double res, int road_thickness, int local_bev_dim);
       double GetBearing(double lat, double lon);
-      cv::Mat RetrieveLocalBev(double lat, double lon, double v, double a_x, double a_y, double w_z, double dt, std::vector<Node*> plan, int region); 
+      //cv::Mat RetrieveLocalBev(double lat, double lon, double v, double a_x, double a_y, double w_z, double dt, std::vector<Node*> plan, int region); 
   };
 
 

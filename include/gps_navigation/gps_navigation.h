@@ -11,6 +11,23 @@
 #define MAX_THRESH 8.0
 
 namespace gps_navigation{
+  struct EgoState;
+  struct EgoState{
+    // Measurements from IMU
+    double a_x, a_y, w_z;
+    
+    // Position estimated from GPS
+    Node pose;
+
+    // Position estimated by IMU+GPS
+    double x_ego, y_ego, yaw_ego, prev_yaw_ego;
+
+    // Velocities integrated from IMU
+    double v, v_x, v_y;
+    bool pose_init = false;
+    bool bearing_init = false;
+    bool gps_is_valid = false;
+  };
   class Map{
     public:
       Map();
@@ -43,11 +60,32 @@ namespace gps_navigation{
   class Navigation{
     public:
       Navigation();
-      Navigation(std::string map_path, double origin_x, double origin_y);
+      Navigation(std::string map_path, double x_origin, double y_origin);
       Map* GetMap();
+      void SetStart(double lat, double lon);
+      void SetTarget(double lat, double lon);
+      void SetTargetRelative(double x_dest, double y_dest);
+      void ResetPlan();
+      std::vector<Node*> Plan();
+      std::pair<int, Node*> FindClosestPlannedNode();
+      std::tuple<bool, long, double, double, double> UpdateState(double lat, double lon, double v, double w_z, double a_x, double t);
 
     private:
       Map* osm_map_;
+      EgoState state_;
+      Node* start_node_;
+      Node* end_node_;
+      //Node* current_node_;
+      Node* nearest_gps_node_;
+      Node* ref_origin_;
+      std::vector<Node*> current_plan_;
+      double lat_origin_;
+      double lon_origin_;
+      double t_prev_ = -1.0;
+      bool new_gps_ = false; 
+
+      // Index of node that comes after 
+      long next_node_index_;
     
   }; 
 }

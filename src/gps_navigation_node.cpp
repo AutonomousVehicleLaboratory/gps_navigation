@@ -69,6 +69,7 @@ namespace gps_navigation{
       imu_avail = true;
       return; 
     }
+    /*
     if(gps_avail && imu_avail){
       ros::Duration dt = ros::Time::now() - twist.header.stamp;
       cv::Mat local_osm_bev = osm_bev->RetrieveLocalBev(lat_pose, lon_pose,
@@ -79,19 +80,27 @@ namespace gps_navigation{
                                                        dt.toSec(), plan, 200);
       sensor_msgs::ImagePtr local_osm_bev_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", local_osm_bev).toImageMsg();
       gps_bev_pub.publish(local_osm_bev_msg);
-    }
-    if((gps_avail && has_clicked_point) || new_gps_msg){
+    }*/
+    if(gps_avail && has_clicked_point){
       // Closest node wrt position of ego vehicle
-      point1_shortest = gps_navigator->GetMap()->FindClosestNode(lat_pose, lon_pose);
+      gps_navigator->SetStart(lat_pose, lon_pose);
       // Destination point manually set
-      point2_shortest = gps_navigator->GetMap()->FindClosestNodeRelative(x_dest, y_dest, kOsmOriginX, kOsmOriginY);
-      plan = gps_navigator->GetMap()->ShortestPath(point1_shortest, point2_shortest);
+      gps_navigator->SetTargetRelative(x_dest, y_dest);
+      plan = gps_navigator->Plan();
       new_plan = true;
       has_clicked_point = false;
       
       new_gps_msg = false;
-      //osm_map->osm_graph_.ResetGraph(osm_map->navigation_nodes_);
-      gps_navigator->GetMap()->ResetPlan();
+      gps_navigator->ResetPlan();
+    }
+    if(gps_avail && plan.size()){
+      //gps_navigator->UpdateState(ego_speed, twist.angular_velocity.z, 
+      //                           twist.linear_acceleration.x, ros::Time::now().toSec());
+      //static_cast<void>(gps_navigator->UpdateState(lat_pose, lon_pose,  ego_speed, twist.angular_velocity.z, 
+      //                           twist.linear_acceleration.x, ros::Time::now().toSec()));
+      std::tuple<bool, long, double, double, double> ego_state = gps_navigator->UpdateState(lat_pose, lon_pose,  ego_speed, 
+                                                                 twist.angular_velocity.z, twist.linear_acceleration.x, ros::Time::now().toSec());
+      //std::cout << "UpdatingState" << std::endl;
     }
     
     if(new_plan){

@@ -14,7 +14,7 @@ namespace gps_navigation{
     max_y_ = 0;
     ref_start_ = new Node;
     ego_ = new EgoState;
-    ego_->pose = new Node;
+    //ego_.pose = new Node;
     ref_start_->lat = origin_lat;
     ref_start_->lon = origin_lon;
 
@@ -61,9 +61,9 @@ namespace gps_navigation{
     
   }
   double GpsBev::GetBearing(double lat, double lon){
-    double y = sin(lon - ego_->pose->lon)*cos(lat);
-    double x = cos(ego_->pose->lat)*sin(lat) -
-               sin(ego_->pose->lat)*cos(lat)*cos(lon - ego_->pose->lon);
+    double y = sin(lon - ego_->pose.lon)*cos(lat);
+    double x = cos(ego_->pose.lat)*sin(lat) -
+               sin(ego_->pose.lat)*cos(lat)*cos(lon - ego_->pose.lon);
     double theta = atan2(y, x);
     return (int)(theta*180/M_PI + 360) % 360;
     //return theta*180/M_PI;
@@ -73,6 +73,7 @@ namespace gps_navigation{
     //double theta = atan2(y, x);
     //return (int)(theta*180/M_PI + 360) % 360;
   }
+  /*
   cv::Mat GpsBev::RetrieveLocalBev(double lat, double lon, double v, double a_x, double a_y, double w_z, double dt, std::vector<Node*> plan, int region){
     ego_->a_x = a_x; 
     ego_->a_y = a_y;
@@ -177,6 +178,6 @@ namespace gps_navigation{
     cv::Mat local_bev(osm_map_, roi);
 
     return local_bev; 
-  } 
+  }*/ 
 
 }
