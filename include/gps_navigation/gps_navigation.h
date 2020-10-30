@@ -86,6 +86,7 @@ namespace gps_navigation{
 
       // Index of node that comes after 
       long next_node_index_;
+      double x_next_, y_next_;
     
   }; 
 }
