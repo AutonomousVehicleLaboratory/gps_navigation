@@ -284,10 +284,15 @@ namespace gps_navigation{
       state_.v = v;
       // Set initial position/orientation of ego vehicle
       if(current_plan_.size() > 1){
-        std::pair<double, double> dx_dy = RelativeDisplacement(current_plan_[next_node_index_], 
+        std::pair<double, double> dx_dy1 = RelativeDisplacement(ref_origin_, 
+                                                               current_plan_[next_node_index_]);
+        std::pair<double, double> dx_dy2 = RelativeDisplacement(ref_origin_, 
                                                                current_plan_[next_node_index_+1]);
+        //std::pair<double, double> dx_dy = RelativeDisplacement(current_plan_[next_node_index_], 
+        //                                                       current_plan_[next_node_index_+1]);
         //double dx_dy_norm = sqrt(dx_dy.first*dx_dy.first + dx_dy.second*dx_dy.second);
-        state_.yaw_ego = atan2(start_node_->dx_dy.second, start_node_->dx_dy.first);
+        state_.yaw_ego = (M_PI + atan2((dx_dy1.second - dx_dy2.second),
+                               (dx_dy1.first - dx_dy2.first)));
         state_.prev_yaw_ego = state_.yaw_ego;
         state_.pose.lat = lat;
         state_.pose.lon = lon;
@@ -334,7 +339,7 @@ namespace gps_navigation{
         start_node_ = planned_node.second;
         state_.x_ego = x_y_node.first;
         state_.y_ego = x_y_node.second;
-        state_.prev_yaw_ego = state_.yaw_ego;
+        //state_.prev_yaw_ego = state_.yaw_ego;
         // Set orientation
         std::cout << "i: " << next_node_index_ << " len: " << current_plan_.size() << std::endl;
         std::pair<double, double> dx_dy1 = RelativeDisplacement(ref_origin_, 
@@ -343,11 +348,18 @@ namespace gps_navigation{
                                                                current_plan_[next_node_index_+1]);
         //double dx_dy_norm = sqrt(dx_dy.first*dx_dy.first + dx_dy.second*dx_dy.second);
         // TODO: use imu for drastic changes in orientation
-        state_.prev_yaw_ego = state_.yaw_ego;
-        //state_.yaw_ego = atan2(start_node_->dx_dy.second, start_node_->dx_dy.first);
-    
-        state_.yaw_ego = (M_PI + atan2((dx_dy1.second - dx_dy2.second),
+        double new_yaw = (M_PI + atan2((dx_dy1.second - dx_dy2.second),
                                (dx_dy1.first - dx_dy2.first)));
+        //if(abs(new_yaw - state_.prev_yaw_ego) > 0.35){
+        //  double dt = t - t_prev_;
+        //  state_.yaw_ego = state_.prev_yaw_ego + (w_z * dt); 
+        //}
+        //if(abs(new_yaw - state_.yaw_ego) < 0.35){
+        //  state_.yaw_ego = new_yaw;
+        //}
+        state_.yaw_ego = new_yaw;
+        t_prev_ = t;
+    
         current_state = std::make_tuple(true, next_node_index_, state_.x_ego, state_.y_ego, state_.yaw_ego); 
         return current_state;
       }
@@ -355,10 +367,22 @@ namespace gps_navigation{
     }
     else{
       // TODO: Use IMU to update position
+        // Use imu for drastic changes in orientation
+        /*
+        if(abs(new_yaw - state_.prev_yaw_ego) > 0.35){
+          double dt = t - t_prev_;
+          t_prev_ = t;
+          state_.yaw_ego += w_z * dt; 
+        }
+        else{ 
+          state_.yaw_ego = new_yaw;
+        }
+        */
       double dt = t - t_prev_;
-      double dd = v*dt;
+      double dd = 2*v*dt;
       t_prev_ = t;
       
+      state_.yaw_ego += w_z * dt; 
       state_.x_ego += dd*cos(state_.yaw_ego);
       state_.y_ego += dd*sin(state_.yaw_ego);
       current_state = std::make_tuple(true, next_node_index_, state_.x_ego, state_.y_ego, state_.yaw_ego); 
