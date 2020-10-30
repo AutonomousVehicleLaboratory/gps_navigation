@@ -75,7 +75,7 @@ namespace gps_navigation{
   //  //return (int)(theta*180/M_PI + 360) % 360;
   //}
   
-  cv::Mat GpsBev::RetrieveLocalBev(double x, double y, int next_node, std::vector<Node*> plan, int region){
+  cv::Mat GpsBev::RetrieveLocalBev(double x, double y, double yaw, int next_node, std::vector<Node*> plan, int region){
 
     unsigned int u_pose = (unsigned int)((x  + x_origin_) / map_res_); 
     unsigned int v_pose = (unsigned int)((y + y_origin_) / map_res_);
@@ -120,10 +120,16 @@ namespace gps_navigation{
       prev_plan_ = plan;
 
     }
+    // Extract bev 
     cv::Rect roi(v_pose-(region/2), u_pose-(region/2), region, region);
     cv::Mat local_bev(osm_map_, roi);
+    // Rotate bev
+    cv::Mat rot_local_bev;
+    cv::Point2f rot_point(local_bev.cols/2.0, local_bev.rows/2.0);
+    cv::Mat r_so3 = cv::getRotationMatrix2D(rot_point, 180-(yaw*180/M_PI), 1.0);
+    cv::warpAffine(local_bev, rot_local_bev, r_so3, cv::Size(local_bev.cols, local_bev.rows)); 
 
-    return local_bev; 
+    return rot_local_bev; 
   }
 
 }

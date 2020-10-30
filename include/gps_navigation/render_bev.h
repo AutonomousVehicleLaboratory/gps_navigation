@@ -49,7 +49,7 @@ namespace gps_navigation{
       GpsBev();
       GpsBev(std::vector<Way*> road_network, double origin_lat, double origin_lon, double res, int road_thickness, int local_bev_dim);
       //double GetBearing(double lat, double lon);
-      cv::Mat RetrieveLocalBev(double x, double y, int next_node, std::vector<Node*> plan, int region); 
+      cv::Mat RetrieveLocalBev(double x, double y, double yaw, int next_node, std::vector<Node*> plan, int region); 
   };
 
 

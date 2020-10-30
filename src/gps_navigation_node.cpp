@@ -110,8 +110,8 @@ namespace gps_navigation{
         std::cout << "x: " << std::get<2>(ego_state) << "y: " << std::get<3>(ego_state) << std::endl;
         gps_closest_viz_pub.publish(oriented_ego);
         // Get BEV image and publish too
-        cv::Mat local_osm_bev = osm_bev->RetrieveLocalBev(std::get<2>(ego_state), std::get<3>(ego_state), std::get<1>(ego_state),
-                                                         plan, 200);
+        cv::Mat local_osm_bev = osm_bev->RetrieveLocalBev(std::get<2>(ego_state), std::get<3>(ego_state), std::get<4>(ego_state),
+                                                          std::get<1>(ego_state), plan, 200);
         sensor_msgs::ImagePtr local_osm_bev_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", local_osm_bev).toImageMsg();
         gps_bev_pub.publish(local_osm_bev_msg);
         
