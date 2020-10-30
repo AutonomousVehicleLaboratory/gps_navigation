@@ -348,17 +348,23 @@ namespace gps_navigation{
     
         state_.yaw_ego = (M_PI + atan2((dx_dy1.second - dx_dy2.second),
                                (dx_dy1.first - dx_dy2.first)));
-        std::cout << "dx: " << dx_dy1.second - dx_dy2.second << " dy: " << 
-                               (dx_dy1.first - dx_dy2.first) << " yaw: " << state_.yaw_ego << std::endl;
         current_state = std::make_tuple(true, next_node_index_, state_.x_ego, state_.y_ego, state_.yaw_ego); 
         return current_state;
       }
 
     }
-    //else{
-    //  // TODO: Use IMU to update position 
-    //  
-    //}
+    else{
+      // TODO: Use IMU to update position
+      double dt = t - t_prev_;
+      double dd = v*dt;
+      t_prev_ = t;
+      
+      state_.x_ego += dd*cos(state_.yaw_ego);
+      state_.y_ego += dd*sin(state_.yaw_ego);
+      current_state = std::make_tuple(true, next_node_index_, state_.x_ego, state_.y_ego, state_.yaw_ego); 
+       
+      
+    }
      
   
   } 
