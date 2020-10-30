@@ -35,6 +35,7 @@ namespace gps_navigation{
       ros::Publisher road_network_viz;
       ros::Publisher node_orientation_viz;
       ros::Publisher gps_viz_pub;
+      ros::Publisher gps_closest_viz_pub;
       ros::Publisher gps_bev_pub;
   
       ros::Subscriber gps_pose_sub;
@@ -56,6 +57,7 @@ namespace gps_navigation{
       // Variables    
       Node* ref_start = new Node;
       Node* gps_pose = new Node;
+      int gps_ego_counter = 0;
       bool gps_avail = false;
       bool imu_avail = false;
       bool new_plan = false;

@@ -6,6 +6,7 @@ namespace gps_navigation{
     road_network_viz = n.advertise<nav_msgs::Path>("/road_network", 1000);
     node_orientation_viz = n.advertise<visualization_msgs::Marker>("/node_orientations", 1000);
     gps_viz_pub = n.advertise<visualization_msgs::Marker>("/gps_pose", 1000);
+    gps_closest_viz_pub = n.advertise<visualization_msgs::Marker>("/gps_oriented_pose", 1000);
     gps_bev_pub = n.advertise<sensor_msgs::Image>("/osm_bev", 1000);
     gps_pose_sub = n.subscribe("/lat_lon", 1000, &GpsNavigationNode::GpsCallback, this);
     imu_sub = n.subscribe("/livox/imu", 1000, &GpsNavigationNode::ImuCallback, this);
@@ -100,6 +101,14 @@ namespace gps_navigation{
       //                           twist.linear_acceleration.x, ros::Time::now().toSec()));
       std::tuple<bool, long, double, double, double> ego_state = gps_navigator->UpdateState(lat_pose, lon_pose,  ego_speed, 
                                                                  twist.angular_velocity.z, twist.linear_acceleration.x, ros::Time::now().toSec());
+      if(std::get<0>(ego_state)){
+        visualization_msgs::Marker oriented_ego; 
+        oriented_ego.action = visualization_msgs::Marker::ADD; 
+        oriented_ego = GetMarker(1, gps_ego_counter++, ros::Time::now(), 
+                                                           std::get<2>(ego_state), std::get<3>(ego_state), 0.0, std::get<4>(ego_state));
+        std::cout << "x: " << std::get<2>(ego_state) << "y: " << std::get<3>(ego_state) << std::endl;
+        gps_closest_viz_pub.publish(oriented_ego);
+      }
       //std::cout << "UpdatingState" << std::endl;
     }
     
