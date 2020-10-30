@@ -45,10 +45,11 @@ namespace gps_navigation{
       unsigned int pix_y_;
       int road_thickness_;
       std::vector<Node*> prev_plan_;
+      int prev_index_;
       GpsBev();
       GpsBev(std::vector<Way*> road_network, double origin_lat, double origin_lon, double res, int road_thickness, int local_bev_dim);
-      double GetBearing(double lat, double lon);
-      //cv::Mat RetrieveLocalBev(double lat, double lon, double v, double a_x, double a_y, double w_z, double dt, std::vector<Node*> plan, int region); 
+      //double GetBearing(double lat, double lon);
+      cv::Mat RetrieveLocalBev(double x, double y, int next_node, std::vector<Node*> plan, int region); 
   };
 
 

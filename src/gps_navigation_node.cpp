@@ -102,13 +102,21 @@ namespace gps_navigation{
       std::tuple<bool, long, double, double, double> ego_state = gps_navigator->UpdateState(lat_pose, lon_pose,  ego_speed, 
                                                                  twist.angular_velocity.z, twist.linear_acceleration.x, ros::Time::now().toSec());
       if(std::get<0>(ego_state)){
+        // Publish oriented ego vehicle
         visualization_msgs::Marker oriented_ego; 
         oriented_ego.action = visualization_msgs::Marker::ADD; 
         oriented_ego = GetMarker(1, gps_ego_counter++, ros::Time::now(), 
                                                            std::get<2>(ego_state), std::get<3>(ego_state), 0.0, std::get<4>(ego_state));
         std::cout << "x: " << std::get<2>(ego_state) << "y: " << std::get<3>(ego_state) << std::endl;
         gps_closest_viz_pub.publish(oriented_ego);
+        // Get BEV image and publish too
+        cv::Mat local_osm_bev = osm_bev->RetrieveLocalBev(std::get<2>(ego_state), std::get<3>(ego_state), std::get<1>(ego_state),
+                                                         plan, 200);
+        sensor_msgs::ImagePtr local_osm_bev_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", local_osm_bev).toImageMsg();
+        gps_bev_pub.publish(local_osm_bev_msg);
+        
       }
+
       //std::cout << "UpdatingState" << std::endl;
     }
     
