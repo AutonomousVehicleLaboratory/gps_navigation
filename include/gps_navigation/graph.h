@@ -1,3 +1,13 @@
+/**
+ * @file graph.h
+ *
+ * @brief Graph search header file for using Dijkstra. 
+ *
+ * @author David Paz 
+ * Contact: dpazruiz@ucsd.edu 
+ *
+ */
+
 #ifndef OSM_GRAPH
 #define OSM_GRAPH
 #include <vector>

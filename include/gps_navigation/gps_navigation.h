@@ -1,3 +1,13 @@
+/**
+ * @file gps_navigation.h
+ *
+ * @brief Header file for handling graph search and ego vehicle states. 
+ *
+ * @author David Paz 
+ * Contact: dpazruiz@ucsd.edu 
+ *
+ */
+
 #ifndef GPSMAP
 #define GPSMAP
 #include <sstream>

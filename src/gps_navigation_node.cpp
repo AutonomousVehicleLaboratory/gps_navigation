@@ -1,3 +1,13 @@
+/**
+ * @file gps_navigation_node.cpp
+ *
+ * @brief ROS node for gps based path planning/local bev generation. 
+ *
+ * @author David Paz 
+ * Contact: dpazruiz@ucsd.edu 
+ *
+ */
+
 #include <gps_navigation/gps_navigation_node.h>
 
 namespace gps_navigation{

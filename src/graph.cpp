@@ -1,3 +1,12 @@
+/**
+ * @file graph.cpp
+ *
+ * @brief Graph search implementation using Dijkstra. 
+ *
+ * @author David Paz 
+ * Contact: dpazruiz@ucsd.edu 
+ *
+ */
 #include <gps_navigation/utils.h>
 #include <gps_navigation/graph.h>
 

@@ -1,3 +1,13 @@
+/**
+ * @file render_bev.h
+ *
+ * @brief Header file for handling local bird's eye view maps using Open Street map data. 
+ *
+ * @author David Paz 
+ * Contact: dpazruiz@ucsd.edu 
+ *
+ */
+
 #include <gps_navigation/graph.h>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>

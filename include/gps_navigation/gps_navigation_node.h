@@ -1,3 +1,13 @@
+/**
+ * @file gps_navigation_node.h
+ *
+ * @brief ROS node header file for gps based path planning/local bev generation. 
+ *
+ * @author David Paz 
+ * Contact: dpazruiz@ucsd.edu 
+ *
+ */
+
 #ifndef GPS_NAV_NODE
 #define GPS_NAV_NODE
 #include "ros/ros.h"

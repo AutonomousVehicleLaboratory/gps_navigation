@@ -1,3 +1,13 @@
+/**
+ * @file gps_navigation.cpp
+ *
+ * @brief Core classes for handling graph search and ego vehicle states. 
+ *
+ * @author David Paz 
+ * Contact: dpazruiz@ucsd.edu 
+ *
+ */
+
 #include <gps_navigation/gps_navigation.h>
 #include <gps_navigation/utils.h>
 

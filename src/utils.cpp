@@ -1,3 +1,13 @@
+/**
+ * @file utils.cpp
+ *
+ * @brief Latitude and Longitude measurements and conversions. 
+ *
+ * @author David Paz 
+ * Contact: dpazruiz@ucsd.edu 
+ *
+ */
+
 #include <gps_navigation/utils.h>
 
 double gps_navigation::GreatCircleDistance(Node* point1, Node* point2){

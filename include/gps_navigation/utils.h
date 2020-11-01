@@ -1,3 +1,13 @@
+/**
+ * @file utils.h
+ *
+ * @brief Header file for Latitude and Longitude measurements and conversions. 
+ *
+ * @author David Paz 
+ * Contact: dpazruiz@ucsd.edu 
+ *
+ */
+
 #ifndef UTILS 
 #define UTILS 
 #include <vector>
