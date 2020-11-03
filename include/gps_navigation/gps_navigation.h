@@ -14,6 +14,7 @@
 #include <tinyxml.h>
 #include <vector>
 #include <stack>
+#include <algorithm>
 //#include <math.h>
 #include <gps_navigation/graph.h>
 #include <tf/transform_datatypes.h>
@@ -98,9 +99,13 @@ namespace gps_navigation{
       double sim_distance_ = false; 
 
       // Index of node that comes after 
-      long next_node_index_;
+      unsigned long next_node_index_;
       double x_next_, y_next_;
       bool use_gps_ = true;
+      
+      // If any 2 nodes between current_plan_[current_index]->current_plan_[current_index+k]
+      // generate an angle >= thresh, return true 
+      bool CheckNextAngles(unsigned long k, double thresh);
     
   }; 
 }

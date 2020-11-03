@@ -284,6 +284,33 @@ namespace gps_navigation{
     }
     return closest_node; 
   }
+  bool Navigation::CheckNextAngles(unsigned long k, double thresh){
+    std::pair<double, double> dx_dy1;
+    std::pair<double, double> dx_dy2;
+    double prev_angle = 0;
+    double current_angle = 0;
+    double yaw_diff = 0;
+    dx_dy1 = RelativeDisplacement(ref_origin_, current_plan_[next_node_index_]);
+    dx_dy2 = RelativeDisplacement(ref_origin_, current_plan_[next_node_index_+1]);
+    prev_angle = M_PI + atan2((dx_dy1.second - dx_dy2.second),
+                           (dx_dy1.first - dx_dy2.first));
+
+    for(int i=next_node_index_+1; i<std::min(next_node_index_+k, current_plan_.size()-1); i++){
+        dx_dy1 = RelativeDisplacement(ref_origin_, current_plan_[i]);
+        dx_dy2 = RelativeDisplacement(ref_origin_, current_plan_[i+1]);
+        current_angle = M_PI + atan2((dx_dy1.second - dx_dy2.second),
+                                (dx_dy1.first - dx_dy2.first));
+      
+        yaw_diff = fabs(fmod(M_PI + current_angle, 2*M_PI)-
+                       fmod(M_PI + prev_angle, 2*M_PI)); 
+
+        prev_angle = current_angle;
+        if(yaw_diff >= thresh){
+          return true;
+        }
+    }
+    return false;
+  }
   std::tuple<bool, long, double, double, double> Navigation::UpdateState(double lat, double lon, double v, double w_z, double a_x, double t){
     std::tuple<bool, long, double, double, double> current_state{false, 0, 0.0, 0.0, -1.0};
 
@@ -420,9 +447,14 @@ namespace gps_navigation{
       }
       
       // If angle between to adjacent nodes is large, simulate rotation
-      if(abs(state_.next_yaw - state_.current_yaw) > 0.1){
-        std::cout << "Normal DIFF: "<< abs(state_.next_yaw - state_.current_yaw) << std::endl;
-        std::cout << "current: "<< state_.current_yaw << " next: " << state_.next_yaw << std::endl;
+      double yaw_diff = fabs(fmod(M_PI + state_.current_yaw, 2*M_PI)-
+                            fmod(M_PI + state_.next_yaw, 2*M_PI)); 
+      std::cout << "New Diff: "<< yaw_diff << std::endl;
+      bool simulate = CheckNextAngles(8, 0.1);
+      //if(fabs(state_.next_yaw - state_.current_yaw) > 0.1){
+      if(simulate){
+        //std::cout << "Normal DIFF: "<< abs(state_.next_yaw - state_.current_yaw) << std::endl;
+        //std::cout << "current: "<< state_.current_yaw << " next: " << state_.next_yaw << std::endl;
         use_sim_yaw_ = true;
         use_gps_ = false; 
         sim_distance_ = 0;
