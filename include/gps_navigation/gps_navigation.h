@@ -14,7 +14,7 @@
 #include <tinyxml.h>
 #include <vector>
 #include <stack>
-#include <math.h>
+//#include <math.h>
 #include <gps_navigation/graph.h>
 #include <tf/transform_datatypes.h>
 //#include <math.h>
@@ -30,7 +30,8 @@ namespace gps_navigation{
     Node pose;
 
     // Position estimated by IMU+GPS
-    double x_ego, y_ego, yaw_ego, prev_yaw_ego;
+    //double x_ego, y_ego, yaw_ego, prev_yaw_ego;
+    double x_ego, y_ego, next_yaw, current_yaw, sim_yaw;
 
     // Velocities integrated from IMU
     double v, v_x, v_y;
@@ -93,10 +94,13 @@ namespace gps_navigation{
       double lon_origin_;
       double t_prev_ = -1.0;
       bool new_gps_ = false; 
+      bool use_sim_yaw_ = false; 
+      double sim_distance_ = false; 
 
       // Index of node that comes after 
       long next_node_index_;
       double x_next_, y_next_;
+      bool use_gps_ = true;
     
   }; 
 }

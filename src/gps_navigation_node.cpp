@@ -117,7 +117,7 @@ namespace gps_navigation{
         oriented_ego.action = visualization_msgs::Marker::ADD; 
         oriented_ego = GetMarker(1, gps_ego_counter++, ros::Time::now(), 
                                                            std::get<2>(ego_state), std::get<3>(ego_state), 0.0, std::get<4>(ego_state));
-        std::cout << "x: " << std::get<2>(ego_state) << "y: " << std::get<3>(ego_state) << std::endl;
+        //std::cout << "x: " << std::get<2>(ego_state) << "y: " << std::get<3>(ego_state) << std::endl;
         gps_closest_viz_pub.publish(oriented_ego);
         // Get BEV image and publish too
         cv::Mat local_osm_bev = osm_bev->RetrieveLocalBev(std::get<2>(ego_state), std::get<3>(ego_state), std::get<4>(ego_state),

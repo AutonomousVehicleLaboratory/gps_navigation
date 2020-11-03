@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <queue>
 #include <stack>
-#include <math.h>
+//#include <math.h>
 #include <tf/transform_datatypes.h>
 namespace gps_navigation{
   struct Node;

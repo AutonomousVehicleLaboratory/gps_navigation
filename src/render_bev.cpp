@@ -137,6 +137,7 @@ namespace gps_navigation{
     cv::Mat rot_local_bev;
     cv::Point2f rot_point(local_bev.cols/2.0, local_bev.rows/2.0);
     cv::Mat r_so3 = cv::getRotationMatrix2D(rot_point, 180-(yaw*180/M_PI), 1.0);
+    //cv::Mat r_so3 = cv::getRotationMatrix2D(rot_point, (-1.0*yaw*180/M_PI), 1.0);
     cv::warpAffine(local_bev, rot_local_bev, r_so3, cv::Size(local_bev.cols, local_bev.rows)); 
 
     return rot_local_bev; 

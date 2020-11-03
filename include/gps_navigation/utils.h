@@ -13,6 +13,7 @@
 #include <vector>
 #include <tf/transform_datatypes.h>
 #include <gps_navigation/graph.h>
+//#include <math.h>
 
 namespace gps_navigation{
   const double kDegRadsConversion = M_PI/180;
