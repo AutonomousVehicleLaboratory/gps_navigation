@@ -22,17 +22,18 @@ class SemanticPublisher():
  
     bridge = CvBridge()
     veh_pose = PoseStamped()
-    x_origin = 1369.04968262
-    y_origin = 562.848144531
+    #x_origin = 1369.04968262
+    #y_origin = 562.848144531
     resolution = 0.2
     print("Loading Map...")
     #bev_map = cv2.imread("/home/dfpazr/Documents/CogRob/avl/semantic_navigation/bev.jpg")
-    bev_map = cv2.imread("/home/dfpazr/Documents/CogRob/avl/TritonNet/iros_psm_ws/src/vision_semantic_segmentation/outputs/cfn_mtx_with_intensity/version_10/global_map.png")
-    print("Map Loaded")
     local_map_pub = rospy.Publisher('/semantic_pose', Image, queue_size=10)
-    def __init__(self):
+    def __init__(self, x_origin, y_origin, map_file):
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_callback)
-    
+        self.x_origin = x_origin
+        self.y_origin = y_origin 
+        self.bev_map = cv2.imread(map_file)
+        print("Map Loaded")
 
         while not rospy.is_shutdown():
             self.rate.sleep()
@@ -66,4 +67,20 @@ class SemanticPublisher():
 
 
 if __name__ == "__main__":
-    SemanticPublisher() 
+    # mail-route-ds
+    #x_origin = 1369.04968262
+    #y_origin = 562.848144531
+    #bev_map = "/home/dfpazr/Documents/CogRob/avl/TritonNet/iros_psm_ws/src/vision_semantic_segmentation/outputs/cfn_mtx_with_intensity/version_10/global_map.png"
+    # map1 
+    x_origin = 637.05267334
+    y_origin =  1365.04785156
+    bev_map = "/home/dfpazr/Documents/CogRob/avl/TritonNet/iros_psm_ws/src/vision_semantic_segmentation/outputs/cfn_mtx_with_intensity/version_24/global_map.png"
+    ## map2
+    #x_origin = 267.616485596 
+    #y_origin = 696.055175781 
+    #bev_map = "/home/dfpazr/Documents/CogRob/avl/TritonNet/iros_psm_ws/src/vision_semantic_segmentation/outputs/cfn_mtx_with_intensity/version_19/global_map.png"
+    ## map3
+    #x_origin = 118.229263306
+    #y_origin = 81.1667251587
+    #bev_map = "/home/dfpazr/Documents/CogRob/avl/TritonNet/iros_psm_ws/src/vision_semantic_segmentation/outputs/cfn_mtx_with_intensity/version_17/global_map.png"
+    SemanticPublisher(x_origin, y_origin, bev_map) 
