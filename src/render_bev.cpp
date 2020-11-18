@@ -85,13 +85,17 @@ namespace gps_navigation{
   //  //return (int)(theta*180/M_PI + 360) % 360;
   //}
   
-  cv::Mat GpsBev::RetrieveLocalBev(double x, double y, double yaw, int next_node, std::vector<Node*> plan, int region){
+  std::pair<cv::Mat, cv::Mat> GpsBev::RetrieveLocalBev(double x, double y, double yaw, int next_node, std::vector<Node*> plan, int region){
 
     unsigned int u_pose = (unsigned int)((x  + x_origin_) / map_res_); 
     unsigned int v_pose = (unsigned int)((y + y_origin_) / map_res_);
     //cv::Mat local_bev = osm_map_(cv::Range(u_pose-region, u_pose+region), cv::Range(v_pose-region, v_pose+region));
     //cv::Mat local_bev = osm_map_(cv::Range(v_pose-(region/2), u_pose-(region/2)), cv::Range(region, region));
     
+    std::pair<cv::Mat, cv::Mat> osm_bevs;
+    cv::Mat rot_unrouted_bev;
+    cv::Mat rot_routed_bev;
+
     if(plan.size()){
       // Paint out previous plan
       if(prev_plan_.size() != 0){
@@ -110,6 +114,14 @@ namespace gps_navigation{
            
         }
       } 
+      // Extract unrouted bev 
+      cv::Rect roi(v_pose-(region/2), u_pose-(region/2), region, region);
+      cv::Mat unrouted_bev(osm_map_, roi);
+      // Rotate unrouted bev
+      cv::Point2f rot_point(unrouted_bev.cols/2.0, unrouted_bev.rows/2.0);
+      cv::Mat r_so3 = cv::getRotationMatrix2D(rot_point, 180-(yaw*180/M_PI), 1.0);
+      //cv::Mat r_so3 = cv::getRotationMatrix2D(rot_point, (-1.0*yaw*180/M_PI), 1.0);
+      cv::warpAffine(unrouted_bev, rot_unrouted_bev, r_so3, cv::Size(unrouted_bev.cols, unrouted_bev.rows)); 
       
       // Paint new plan 
       for(unsigned int i=next_node; i<plan.size()-1; i++){
@@ -129,18 +141,15 @@ namespace gps_navigation{
       prev_index_ = next_node;
       prev_plan_ = plan;
 
-    }
-    // Extract bev 
-    cv::Rect roi(v_pose-(region/2), u_pose-(region/2), region, region);
-    cv::Mat local_bev(osm_map_, roi);
-    // Rotate bev
-    cv::Mat rot_local_bev;
-    cv::Point2f rot_point(local_bev.cols/2.0, local_bev.rows/2.0);
-    cv::Mat r_so3 = cv::getRotationMatrix2D(rot_point, 180-(yaw*180/M_PI), 1.0);
-    //cv::Mat r_so3 = cv::getRotationMatrix2D(rot_point, (-1.0*yaw*180/M_PI), 1.0);
-    cv::warpAffine(local_bev, rot_local_bev, r_so3, cv::Size(local_bev.cols, local_bev.rows)); 
+      // Extract routed bev 
+      cv::Mat routed_bev(osm_map_, roi);
+      // Rotate routed bev
+      cv::warpAffine(routed_bev, rot_routed_bev, r_so3, cv::Size(routed_bev.cols, routed_bev.rows)); 
 
-    return rot_local_bev; 
+    }
+    osm_bevs.first = rot_unrouted_bev;
+    osm_bevs.second = rot_routed_bev;
+    return osm_bevs; 
   }
 
 }

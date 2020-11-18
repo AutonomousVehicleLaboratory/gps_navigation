@@ -17,7 +17,8 @@ namespace gps_navigation{
     node_orientation_viz = n.advertise<visualization_msgs::Marker>("/node_orientations", 1000);
     gps_viz_pub = n.advertise<visualization_msgs::Marker>("/gps_pose", 1000);
     gps_closest_viz_pub = n.advertise<visualization_msgs::Marker>("/gps_oriented_pose", 1000);
-    gps_bev_pub = n.advertise<sensor_msgs::Image>("/osm_bev", 1000);
+    unrouted_bev_pub = n.advertise<sensor_msgs::Image>("/unrouted_osm", 1000);
+    routed_bev_pub = n.advertise<sensor_msgs::Image>("/routed_osm", 1000);
     gps_pose_sub = n.subscribe("/lat_lon", 1000, &GpsNavigationNode::GpsCallback, this);
     imu_sub = n.subscribe("/livox/imu", 1000, &GpsNavigationNode::ImuCallback, this);
     speed_sub = n.subscribe("/pacmod/as_tx/vehicle_speed", 1000, &GpsNavigationNode::SpeedCallback, this);
@@ -28,7 +29,7 @@ namespace gps_navigation{
     //osm_map = new Map(osm_path);
     gps_navigator = new Navigation(osm_path, kOsmOriginX, kOsmOriginY);
     //osm_bev = new GpsBev(osm_map->ways_, kOsmOriginX, kOsmOriginY, 0.5, 2, 200);
-    osm_bev = new GpsBev(gps_navigator->GetMap()->GetWays(), kOsmOriginX, kOsmOriginY, 0.5, 2, 200);
+    osm_bev = new GpsBev(gps_navigator->GetMap()->GetWays(), kOsmOriginX, kOsmOriginY, 0.5, 8, 200);
   
   }
   void GpsNavigationNode::ClickedPointCallback(const geometry_msgs::PoseStamped::ConstPtr& msg){
@@ -120,10 +121,13 @@ namespace gps_navigation{
         //std::cout << "x: " << std::get<2>(ego_state) << "y: " << std::get<3>(ego_state) << std::endl;
         gps_closest_viz_pub.publish(oriented_ego);
         // Get BEV image and publish too
-        cv::Mat local_osm_bev = osm_bev->RetrieveLocalBev(std::get<2>(ego_state), std::get<3>(ego_state), std::get<4>(ego_state),
+        std::pair<cv::Mat, cv::Mat> osm_bevs = osm_bev->RetrieveLocalBev(std::get<2>(ego_state), std::get<3>(ego_state), std::get<4>(ego_state),
                                                           std::get<1>(ego_state), plan, 200);
-        sensor_msgs::ImagePtr local_osm_bev_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", local_osm_bev).toImageMsg();
-        gps_bev_pub.publish(local_osm_bev_msg);
+        sensor_msgs::ImagePtr unrouted_osm_bev_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", osm_bevs.first).toImageMsg();
+        sensor_msgs::ImagePtr routed_osm_bev_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", osm_bevs.second).toImageMsg();
+
+        unrouted_bev_pub.publish(unrouted_osm_bev_msg);
+        routed_bev_pub.publish(routed_osm_bev_msg);
         
       }
 

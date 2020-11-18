@@ -60,9 +60,10 @@ class SemanticPublisher():
         local_map = np.copy(local_map)
         print("Yaw: " + str(180-current_yaw))
         # positive angle represents a CC rotation 
-        local_map = imutils.rotate(local_map, angle=180-current_yaw)
+        local_map = imutils.rotate(local_map, angle=180.0-current_yaw+3)
         local_map[195:205, 195:205] = np.array([0,0,255])
         local_map_msg = self.bridge.cv2_to_imgmsg(local_map)
+        local_map_msg.header = msg.header
         self.local_map_pub.publish(local_map_msg)
 
 
