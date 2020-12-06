@@ -1,0 +1,6 @@
+<launch>
+    <node pkg="gps_navigation" type="gps_navigation_node" name="gps_navigation" output="screen" />
+    <node pkg="gps_navigation" type="gps_navigation_node" name="gps_navigation" output="screen" />
+    <node pkg="gps_navigation" type="nmea_to_navsat.py" name="nmea2navsat" output="screen" />
+
+</launch>

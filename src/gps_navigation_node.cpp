@@ -19,6 +19,7 @@ namespace gps_navigation{
     gps_closest_viz_pub = n.advertise<visualization_msgs::Marker>("/gps_oriented_pose", 1000);
     unrouted_bev_pub = n.advertise<sensor_msgs::Image>("/unrouted_osm", 1000);
     routed_bev_pub = n.advertise<sensor_msgs::Image>("/routed_osm", 1000);
+    conc_bev_pub = n.advertise<sensor_msgs::Image>("/concat_osm", 1000);
     gps_pose_sub = n.subscribe("/lat_lon", 1000, &GpsNavigationNode::GpsCallback, this);
     imu_sub = n.subscribe("/livox/imu", 1000, &GpsNavigationNode::ImuCallback, this);
     speed_sub = n.subscribe("/pacmod/as_tx/vehicle_speed", 1000, &GpsNavigationNode::SpeedCallback, this);
@@ -123,6 +124,13 @@ namespace gps_navigation{
         // Get BEV image and publish too
         std::pair<cv::Mat, cv::Mat> osm_bevs = osm_bev->RetrieveLocalBev(std::get<2>(ego_state), std::get<3>(ego_state), std::get<4>(ego_state),
                                                           std::get<1>(ego_state), plan, 200);
+        
+        if(!osm_bevs.first.empty()){
+          cv::Mat conc_bevs;
+          cv::vconcat(osm_bevs.first, osm_bevs.second, conc_bevs);
+          sensor_msgs::ImagePtr conc_osm_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", conc_bevs).toImageMsg();
+          conc_bev_pub.publish(conc_osm_msg);
+        }
         sensor_msgs::ImagePtr unrouted_osm_bev_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", osm_bevs.first).toImageMsg();
         sensor_msgs::ImagePtr routed_osm_bev_msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", osm_bevs.second).toImageMsg();
 

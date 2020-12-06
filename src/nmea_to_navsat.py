@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 import sys
 sys.path.append('/opt/ros/kinetic/lib/python2.7/dist-packages')
 from sensor_msgs.msg import NavSatFix
