@@ -35,6 +35,7 @@ namespace gps_navigation{
       void GpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg);
       void ImuCallback(const sensor_msgs::Imu::ConstPtr& msg);
       void SpeedCallback(const std_msgs::Float64::ConstPtr& msg);
+      void PublishGpsMap();
       visualization_msgs::Marker GetMarker(int marker_type, long id, ros::Time time, double x, double y, double z, double yaw);
       nav_msgs::Path VisualizePath(std::vector<Node*> path);
       nav_msgs::Path VisualizeNetwork();
@@ -86,6 +87,8 @@ namespace gps_navigation{
       ros::Time current_t;
       double bearing;
 
+      // Updated upon IMU callback
+      std::tuple<bool, long, double, double, double> ego_state;
 
   
   };

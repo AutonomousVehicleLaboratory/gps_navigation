@@ -26,7 +26,7 @@ namespace gps_navigation{
     clicked_point = n.subscribe("/move_base_simple/goal", 1000, &GpsNavigationNode::ClickedPointCallback, this);
     
     // Initialize map
-    std::string osm_path = "/home/dfpazr/Documents/CogRob/avl/planning/gps_planner_nv/src/osm_planner/osm_example/ucsd-large.osm";
+    std::string osm_path = "/home/avl-robot/DPGN/dpgn_models/osm/ucsd.osm";
     //osm_map = new Map(osm_path);
     gps_navigator = new Navigation(osm_path, kOsmOriginX, kOsmOriginY);
     //osm_bev = new GpsBev(osm_map->ways_, kOsmOriginX, kOsmOriginY, 0.5, 2, 200);
@@ -106,20 +106,32 @@ namespace gps_navigation{
       new_gps_msg = false;
       gps_navigator->ResetPlan();
     }
+
     if(gps_avail && plan.size()){
-      //gps_navigator->UpdateState(ego_speed, twist.angular_velocity.z, 
-      //                           twist.linear_acceleration.x, ros::Time::now().toSec());
-      //static_cast<void>(gps_navigator->UpdateState(lat_pose, lon_pose,  ego_speed, twist.angular_velocity.z, 
-      //                           twist.linear_acceleration.x, ros::Time::now().toSec()));
-      std::tuple<bool, long, double, double, double> ego_state = gps_navigator->UpdateState(lat_pose, lon_pose,  ego_speed, 
+      ego_state = gps_navigator->UpdateState(lat_pose, lon_pose,  ego_speed, 
                                                                  twist.angular_velocity.z, twist.linear_acceleration.x, ros::Time::now().toSec());
+
+    }
+    
+    if(new_plan){
+      nav_msgs::Path shortest_path = VisualizePath(plan);
+      shortest_path_viz.publish(shortest_path);
+    } 
+    return; 
+  }
+  void GpsNavigationNode::SpeedCallback(const std_msgs::Float64::ConstPtr& msg){
+    ego_speed = msg->data;
+  }
+  
+  void GpsNavigationNode::PublishGpsMap(){
+    if(gps_avail && plan.size()){
+
       if(std::get<0>(ego_state)){
         // Publish oriented ego vehicle
         visualization_msgs::Marker oriented_ego; 
         oriented_ego.action = visualization_msgs::Marker::ADD; 
         oriented_ego = GetMarker(1, gps_ego_counter++, ros::Time::now(), 
                                                            std::get<2>(ego_state), std::get<3>(ego_state), 0.0, std::get<4>(ego_state));
-        //std::cout << "x: " << std::get<2>(ego_state) << "y: " << std::get<3>(ego_state) << std::endl;
         gps_closest_viz_pub.publish(oriented_ego);
         // Get BEV image and publish too
         std::pair<cv::Mat, cv::Mat> osm_bevs = osm_bev->RetrieveLocalBev(std::get<2>(ego_state), std::get<3>(ego_state), std::get<4>(ego_state),
@@ -138,20 +150,8 @@ namespace gps_navigation{
         routed_bev_pub.publish(routed_osm_bev_msg);
         
       }
-
-      //std::cout << "UpdatingState" << std::endl;
     }
-    
-    if(new_plan){
-      nav_msgs::Path shortest_path = VisualizePath(plan);
-      shortest_path_viz.publish(shortest_path);
-    } 
-    return; 
   }
-  void GpsNavigationNode::SpeedCallback(const std_msgs::Float64::ConstPtr& msg){
-    ego_speed = msg->data;
-  }
-  
   visualization_msgs::Marker GpsNavigationNode::GetMarker(int marker_type, long id, ros::Time ts, double x, double y, double z, double yaw){
     visualization_msgs::Marker marker;
     marker.id = id;
@@ -279,6 +279,7 @@ int main(int argc, char **argv){
   gps_navigation::GpsNavigationNode gps_nav_node;
   while(ros::ok()){
     static_cast<void>(gps_nav_node.VisualizeNetwork());
+    gps_nav_node.PublishGpsMap();
     ros::spinOnce(); 
 
   }
