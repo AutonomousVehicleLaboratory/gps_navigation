@@ -248,7 +248,8 @@ namespace gps_navigation{
         if((gps_navigator->GetMap()->GetWays()[i]->nodes[j]->dx_dy.first != 0) && 
            (gps_navigator->GetMap()->GetWays()[i]->nodes[j]->dx_dy.second != 0) &&
            (gps_navigator->GetMap()->GetWays()[i]->one_way)){
-          double yaw = atan2(gps_navigator->GetMap()->GetWays()[i]->nodes[j]->dx_dy.second, gps_navigator->GetMap()->GetWays()[i]->nodes[j]->dx_dy.first);
+          double yaw = atan2(gps_navigator->GetMap()->GetWays()[i]->nodes[j]->dx_dy.second, 
+                             gps_navigator->GetMap()->GetWays()[i]->nodes[j]->dx_dy.first);
           current_direction = GetMarker(1, counter, current_time, dx_dy.first, dx_dy.second, 0.0, yaw);
         }
         else{

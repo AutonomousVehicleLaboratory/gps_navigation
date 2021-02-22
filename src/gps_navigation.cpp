@@ -222,9 +222,12 @@ namespace gps_navigation{
       traj_stack.pop();
     }
     return traj;
-  } std::vector<Way*> Map::GetWays(){
+  } 
+
+  std::vector<Way*> Map::GetWays(){
     return ways_;
   }
+
   void Map::ResetPlan(){
     osm_graph_.ResetGraph(navigation_nodes_);
   }

@@ -47,11 +47,19 @@ namespace gps_navigation{
  
       /* Initializes nodes/ways*/
       void ParseMap();
+      /* Find the closest node within the graph to the given lat/lon coordinate */
       Node* FindClosestNode(double lat, double lon);
+
+      /* Find the closest node within the graph to the given (x, y) relative coordinate wrt
+       * a lat/lon coordinate (origin_x, origin_y) */
       Node* FindClosestNodeRelative(double x, double y, double origin_x, double origin_y);
+
+      /* Estimate shortest path between point1 and point2*/
       std::vector<Node*> ShortestPath(Node* point1, Node* point2);
+
+      /* Return ways */
       std::vector<Way*> GetWays();
-      //std::vector<Node*> GetNavigationNodes();
+
       void ResetPlan();
       
     private:
@@ -73,13 +81,30 @@ namespace gps_navigation{
     public:
       Navigation();
       Navigation(std::string map_path, double x_origin, double y_origin);
+
+      /* Getter for Map object*/
       Map* GetMap();
+
+      /* For planning, set origin */
       void SetStart(double lat, double lon);
+
+      /* For planning, set destination as (lat,lon)*/
       void SetTarget(double lat, double lon);
+
+      /* For planning, set destination as relative (x,y) coordinate
+       * assuming a relative displacement wrt (x_origin,y_origin)*/
       void SetTargetRelative(double x_dest, double y_dest);
+
+      /* Prepares graph for another iteration of graph search*/
       void ResetPlan();
+
+      /* Estimate shortest path and return trajectory*/
       std::vector<Node*> Plan();
+      
+      /* Find node within planned trajectory closest to vehicle pose */
       std::pair<int, Node*> FindClosestPlannedNode();
+      
+      /* Updates state of ego vehicle as reported by GNSS, odom and IMU */
       std::tuple<bool, long, double, double, double> UpdateState(double lat, double lon, double v, double w_z, double a_x, double t);
 
     private:

@@ -92,14 +92,11 @@ namespace gps_navigation{
     int current_dist = 0;
     Node* current_node;
     std::priority_queue<Node*, std::vector<Node*>, NodeComp> pq;
-    //std::cout << "Node1 graph_id: " << point1->graph_id << std::endl;
-    //std::cout << "Node2 graph_id: " << point2->graph_id << std::endl;
     
     // Find shortest path using Dijkstra's algorithm from point1 to point2 
     point1->dist = 0;
     pq.push(point1);
     while(!pq.empty()){
-      //std::cout << "PQ size: " << pq.size() << std::endl;
       current_node = pq.top();
       pq.pop();
       current_dist = current_node->dist;
@@ -107,15 +104,10 @@ namespace gps_navigation{
       // Check terminating condition: destination reached
       if(current_node->graph_id == point2->graph_id){
         
-        //std::cout << "Found shortest path to osm_id: " << current_node->graph_id << std::endl;
         // Traverse from point2 backwards using prev_node pointer
         int p=0;
         while(current_node != NULL){
-          //std::cout << "iter" << std::endl;
-          //if(current_node->osm_id != -1){
-          //  std::cout << "Path (" << p << "): " << current_node->osm_id << std::endl;
-          //  ++p;
-          //}
+
           shortest_path.push(current_node);
           current_node = current_node->prev_node;
         }
@@ -124,11 +116,10 @@ namespace gps_navigation{
       
       // If we have not visited node popped yet
       if(!current_node->visited){
+
         // Mark node as visited
-        //std::cout << "1"<< std::endl;
         current_node->visited = true;
         // Iterate through neighbors
-        //std::cout << "1: " << current_node->osm_id << std::endl;
         if(current_node->edges == NULL){
           continue;
         } 
@@ -136,7 +127,6 @@ namespace gps_navigation{
         auto adj_node_end = current_node->edges->nodes.end();
         auto adj_weight_start = current_node->edges->distances.begin();
         auto adj_weight_end = current_node->edges->distances.end();
-        //std::cout << "2"<< std::endl;
         
         double c;
         while(adj_node_start != adj_node_end){
