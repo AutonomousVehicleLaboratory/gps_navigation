@@ -16,7 +16,7 @@ namespace gps_navigation{
   }
 
   void OsmGraph::Generate(std::vector<Way*> ways, std::unordered_map<int, Node*> node_table){
-    static int edge_counter = 0;
+    //static int edge_counter = 0;
     for (unsigned int i=0; i<ways.size(); i++){
       for (unsigned int j=0; j<ways[i]->nodes.size()-1; j++){
         int start_node_id = ways[i]->nodes[j]->graph_id;
@@ -105,7 +105,7 @@ namespace gps_navigation{
       if(current_node->graph_id == point2->graph_id){
         
         // Traverse from point2 backwards using prev_node pointer
-        int p=0;
+        //int p=0;
         while(current_node != NULL){
 
           shortest_path.push(current_node);
@@ -126,7 +126,7 @@ namespace gps_navigation{
         auto adj_node_start = current_node->edges->nodes.begin(); 
         auto adj_node_end = current_node->edges->nodes.end();
         auto adj_weight_start = current_node->edges->distances.begin();
-        auto adj_weight_end = current_node->edges->distances.end();
+        //auto adj_weight_end = current_node->edges->distances.end();
         
         double c;
         while(adj_node_start != adj_node_end){
@@ -149,6 +149,6 @@ namespace gps_navigation{
        
     }
     std::cout << "Graph disconnected"<< std::endl; 
-    //return shortest_path;
+    return shortest_path;
   }
 }

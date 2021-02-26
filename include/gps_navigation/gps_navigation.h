@@ -44,6 +44,15 @@ namespace gps_navigation{
     public:
       Map();
       Map(std::string map_path);
+
+      // For assigning new node IDs after interpolation
+      int current_graph_id_ = 0;
+
+      /* Parses relevant nodes */
+      void ParseNode(TiXmlElement *node_element);
+
+      /* Parses relevant ways */
+      void ParseWay(TiXmlElement *way_element);
  
       /* Initializes nodes/ways*/
       void ParseMap();
@@ -69,8 +78,23 @@ namespace gps_navigation{
       TiXmlNode *osm_nodes_;
       TiXmlNode *osm_ways_;
       bool osm_status_;
+
+      // Stores road networks: k=highway; v=unclassified/service/tertiary/residential
       std::vector<Way*> ways_;
+      
+      // Stores all unique nodes of type 'crossing'
+      std::unordered_map<int, Node*> crossing_nodes_;
+
+      // Stores all unique nodes of type 'stop sign'
+      std::unordered_map<int, Node*> stop_nodes_;
+
+      // Stores all unique nodes of type 'traffic signal'
+      std::unordered_map<int, Node*> traffic_signal_nodes_;
+
+      // Stores all remaining and unique node definitions
       std::unordered_map<int, Node*> nodes_;
+
+      // Stores interpolated nodes that are only part of road networks
       std::unordered_map<int, Node*> navigation_nodes_;
       OsmGraph osm_graph_;
 

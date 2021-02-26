@@ -17,6 +17,10 @@
 //#include <math.h>
 #include <tf/transform_datatypes.h>
 namespace gps_navigation{
+  
+  enum class NodeType { kStopSign, kTrafficSignal, kCrossing, kRoadElement, kOther }; 
+  enum class WayType { kRoad, kFootPath, kConstruction }; 
+  
   struct Node;
   struct Edge;
 
@@ -34,6 +38,10 @@ namespace gps_navigation{
     double dist = INFINITY; 
     Node* prev_node = NULL; //node that last updated dist
     bool visited = false;
+
+    // Node attributes
+    NodeType key_attribute;
+    std::vector<std::pair<std::string, std::string>> attributes;
   };
   
   struct Edge{
@@ -45,6 +53,11 @@ namespace gps_navigation{
     std::vector<Node*> nodes;
     int way_id = -1;
     bool one_way = false;
+
+    // Way Attributes
+    WayType key_attribute;
+    std::vector<std::pair<std::string, std::string>> attributes;
+    
   };
 
   class NodeComp {
