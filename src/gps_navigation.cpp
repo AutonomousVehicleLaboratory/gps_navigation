@@ -70,7 +70,7 @@ namespace gps_navigation{
     node_element->Attribute("lat", &lat);
     node_element->Attribute("lon", &lon);
 
-    // Avoid inserting duplicate nodes 
+    // Avoid inserting duplicated nodes 
     auto node_check = nodes_.find(node_id);
     if(node_check != nodes_.end()) return ;
 
@@ -88,7 +88,7 @@ namespace gps_navigation{
     // Determine key node type
     NodeType node_type;
     bool is_key_type = false;
-    for (node_tag; node_tag; node_tag = node_tag->NextSiblingElement("tag")) {
+    for (; node_tag; node_tag = node_tag->NextSiblingElement("tag")) {
       k = node_tag->Attribute("k");
       v = node_tag->Attribute("v");
       
@@ -96,21 +96,22 @@ namespace gps_navigation{
       attributes.push_back(std::make_pair(k, v));
 
       // check for stops, traffic signals and crossings and track them 
+      // these are node attributes only
       if(k == "highway"){
         if(v == "stop"){
-            node_type = NodeType::kStopSign; 
-            is_key_type = true;
-            stop_nodes_.insert({node_id, new_node});
+          node_type = NodeType::kStopSign; 
+          is_key_type = true;
+          //stop_nodes_.insert({node_id, new_node});
         }
         else if(v == "traffic_signals"){
-            node_type = NodeType::kTrafficSignal; 
-            is_key_type = true;
-            traffic_signal_nodes_.insert({node_id, new_node});
+          node_type = NodeType::kTrafficSignal; 
+          is_key_type = true;
+          //traffic_signal_nodes_.insert({node_id, new_node});
         }
         else if(v == "crossing"){
-            node_type = NodeType::kCrossing; 
-            is_key_type = true;
-            crossing_nodes_.insert({node_id, new_node});
+          node_type = NodeType::kCrossing; 
+          is_key_type = true;
+          //crossing_nodes_.insert({node_id, new_node});
         }
       }
     }
@@ -140,7 +141,8 @@ namespace gps_navigation{
     std::string k, v;
  
     // For current way, check if any of its tags are relevant for driving scenarios
-    for (tag; tag; tag = tag->NextSiblingElement("tag")) {
+    // these are way attributes only
+    for (; tag; tag = tag->NextSiblingElement("tag")) {
       // A tag includes a key "k" and a value "v"
       k = tag->Attribute("k");
       v = tag->Attribute("v");
@@ -156,7 +158,9 @@ namespace gps_navigation{
         way_valid = true;
          
       }
-      // TODO: track ways of type footpaths and construction
+      // TODO: for footpaths, tag nodes associated with a footpath way
+      // TODO: for construction, find closest nodes do it and tag nodes associated with construction
+      
     }
 
     // Find road way's corresponding nodes
@@ -166,6 +170,7 @@ namespace gps_navigation{
       Way* new_way = new Way;
       new_way->way_id = way_id;
       new_way->one_way = is_oneway;
+      //new_way->key_attribute = WayType::kRoad;
       ways_.push_back(new_way);
 
       // iterate through nodes in way
@@ -235,14 +240,14 @@ namespace gps_navigation{
     
     TiXmlElement *node_element = node_handle.Element(); 
 
-    for (node_element; node_element; node_element= node_element->NextSiblingElement("node")) {
+    for (; node_element; node_element= node_element->NextSiblingElement("node")) {
       // Parse node and insert into crossing_nodes, stop_nodes_, traffic_sign_nodes_ or nodes_ 
       ParseNode(node_element); 
     }
 
     // Extract all of the way information
     TiXmlElement *way_element = way_handle.Element();
-    for (way_element; way_element; way_element = way_element->NextSiblingElement("way")) {
+    for (; way_element; way_element = way_element->NextSiblingElement("way")) {
       ParseWay(way_element);
     } 
   }
@@ -352,10 +357,10 @@ namespace gps_navigation{
     next_node_index_ = 0;
     return current_plan_;
   }
-  std::pair<int, Node*> Navigation::FindClosestPlannedNode(){
+  std::pair<unsigned int, Node*> Navigation::FindClosestPlannedNode(){
     double closest_distance = INFINITY;
     double current_distance = INFINITY;
-    std::pair<int, Node*> closest_node;
+    std::pair<unsigned int, Node*> closest_node;
     
     for(unsigned int i=0; i<current_plan_.size(); i++){
       std::pair<double, double> dx_dy = RelativeDisplacement(&state_.pose, current_plan_[i]);
@@ -379,7 +384,7 @@ namespace gps_navigation{
     prev_angle = M_PI + atan2((dx_dy1.second - dx_dy2.second),
                            (dx_dy1.first - dx_dy2.first));
 
-    for(int i=next_node_index_+1; i<std::min(next_node_index_+k, current_plan_.size()-1); i++){
+    for(unsigned int i=next_node_index_+1; i<std::min(next_node_index_+k, current_plan_.size()-1); i++){
         dx_dy1 = RelativeDisplacement(ref_origin_, current_plan_[i]);
         dx_dy2 = RelativeDisplacement(ref_origin_, current_plan_[i+1]);
         current_angle = M_PI + atan2((dx_dy1.second - dx_dy2.second),
@@ -395,6 +400,108 @@ namespace gps_navigation{
     }
     return false;
   }
+
+  std::vector<Node*> GenerateSTGraph(double lat, double lon, double v){
+    
+    std::vector<Node*> st_graph;
+    //st_graph = osm_graph_.GetNeighbors();
+
+    // [pose | traversed | planned |
+    //  crossings | stops | trafficsignals | footpaths | construction | road_network |]
+    // Insert pose, traversed and planned nodes
+
+    // Get crossings, stops, traffic signals, footpaths, construction
+    // Initialize states
+
+    // If a new gps measurement is received
+    /*
+    if((lat != state_.pose.lat) && use_gps_){
+      state_.pose.lat = lat;
+      state_.pose.lon = lon;
+
+      // Node and position of planned node closest to ego vehicle
+      std::pair<double, double> x_y_ego = RelativeDisplacement(ref_origin_, &state_.pose);
+
+      // Condition to set position/orientation using gps
+      double dist_diff = sqrt((x_y_ego.first - state_.x_ego)*(x_y_ego.first - state_.x_ego) + 
+                              (x_y_ego.second - state_.y_ego)*(x_y_ego.second - state_.y_ego));
+      
+      // If the new GPS location is too far from pose estimated by odometry 
+      if(dist_diff >= 2.0 || t_prev_ == -1){
+        // If this node does not contain orientation information
+        if((start_node_->dx_dy.first == 0) && (start_node_->dx_dy.second == 0)){
+          return current_state;
+        }
+        // Set position based on planned node closest to ego vehicle
+        std::pair<unsigned int, Node*> planned_node = FindClosestPlannedNode();
+        next_node_index_ = planned_node.first;
+        start_node_ = planned_node.second;
+
+        // Set orientation
+        std::pair<double, double> dx_dy1 = RelativeDisplacement(ref_origin_, 
+                                                               current_plan_[next_node_index_]);
+        std::pair<double, double> dx_dy2 = RelativeDisplacement(ref_origin_, 
+                                                               current_plan_[next_node_index_+1]);
+        state_.current_yaw = M_PI + atan2((dx_dy1.second - dx_dy2.second),
+                               (dx_dy1.first - dx_dy2.first));
+        t_prev_ = t;
+        state_.x_ego = dx_dy1.first;
+        state_.y_ego = dx_dy1.second;
+
+        current_state = std::make_tuple(true, next_node_index_, state_.x_ego, state_.y_ego, state_.current_yaw); 
+        return current_state;
+      }
+
+    }
+    else{
+      // Use odometry to update position
+      double dt = t - t_prev_;
+      double dd = 2*v*dt;
+      t_prev_ = t;
+      
+      //state_.yaw_ego += w_z * dt;
+      double dx = dd*cos(state_.current_yaw);
+      double dy = dd*sin(state_.current_yaw);
+      double predicted_x = state_.x_ego + dx;
+      double predicted_y = state_.y_ego + dy;
+      double dist_to_next = sqrt(pow(predicted_x - x_next_, 2) + pow(predicted_y - y_next_, 2));
+      
+      
+      // Update vehicle state with respect to planned path
+      // If distance to next predicted state is less than a threshold, update
+      if(dist_to_next < 2.0){
+        //use_gps_ = false;
+        //if(abs(state_.next_yaw - state_.current_yaw) >= 0.08){
+        //  state_.sim_yaw += w_z * dt;
+        //}
+        std::pair<double, double> dx_dy1 = RelativeDisplacement(ref_origin_, 
+                                                               current_plan_[next_node_index_]);
+        std::pair<double, double> dx_dy2 = RelativeDisplacement(ref_origin_, 
+                                                               current_plan_[next_node_index_+1]);
+        state_.current_yaw = M_PI + atan2((dx_dy1.second - dx_dy2.second),
+                               (dx_dy1.first - dx_dy2.first));
+
+        // Update starting pose
+        state_.x_ego = x_next_;
+        state_.y_ego = y_next_;
+        // Update distance based on remaining distance
+        dd -= dist_to_next;
+        // Update orientation based on next waypoint
+        next_node_index_ += 1;
+      }
+      
+       
+      state_.x_ego += dd*cos(state_.current_yaw);
+      state_.y_ego += dd*sin(state_.current_yaw);
+      current_state = std::make_tuple(true, next_node_index_, state_.x_ego, state_.y_ego, state_.sim_yaw); 
+       
+      
+    }
+    // TODO: Extract graph
+    */ 
+    return st_graph;
+  }
+
   std::tuple<bool, long, double, double, double> Navigation::UpdateState(double lat, double lon, double v, double w_z, double a_x, double t){
     std::tuple<bool, long, double, double, double> current_state{false, 0, 0.0, 0.0, -1.0};
 
@@ -451,7 +558,7 @@ namespace gps_navigation{
           return current_state;
         }
         // Set position based on planned node closest to ego vehicle
-        std::pair<int, Node*> planned_node = FindClosestPlannedNode();
+        std::pair<unsigned int, Node*> planned_node = FindClosestPlannedNode();
         if(planned_node.first == current_plan_.size()-2){
           return current_state;
         }
@@ -561,13 +668,12 @@ namespace gps_navigation{
        
       state_.x_ego += dd*cos(state_.current_yaw);
       state_.y_ego += dd*sin(state_.current_yaw);
-      //current_state = std::make_tuple(true, next_node_index_, state_.x_ego, state_.y_ego, state_.sim_yaw); 
       current_state = std::make_tuple(true, next_node_index_, state_.x_ego, state_.y_ego, state_.sim_yaw); 
        
       
     }
      
-  
+    return current_state; 
   } 
   
    

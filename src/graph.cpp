@@ -151,4 +151,93 @@ namespace gps_navigation{
     std::cout << "Graph disconnected"<< std::endl; 
     return shortest_path;
   }
+  void OsmGraph::FindRoadFeatures(Node* point, int k){
+
+    // Given a node point, find the k nearest neighbors 
+    std::queue<Node*> search_q; 
+    
+    if(!point) return;
+
+    
+    Node* curr_node;
+
+    // Counter to keep track of radius
+    int curr_k = 0;
+
+    // clean explored nodes
+    if(!explored_.empty()){
+      for(auto node: explored_){
+        node->explored = false;
+      }
+      stopsigns_ = {};
+      crossings_ = {};
+      traffic_signals_ = {};
+      foot_paths_ = {};
+      roads_ = {};
+      construction_ = {};
+    }
+
+    search_q.push(point);
+
+    while(curr_k != k){
+      
+      std::queue<Node*> curr_q; 
+
+      while(!search_q.empty()){
+        curr_node = search_q.front();
+        search_q.pop();
+        if(curr_node->explored) continue;
+      
+        // Mark as explored to avoid cycles
+        curr_node->explored = true;
+        explored_.push_back(curr_node);
+
+        // separate node types by:
+        // stopsigns_
+        if(curr_node->key_attribute == NodeType::kStopSign){
+          stopsigns_.push_back(curr_node);
+        }
+        // crossings_ 
+        if(curr_node->key_attribute == NodeType::kCrossing){
+          crossings_.push_back(curr_node);
+        }
+        
+        // traffic_signals_
+        if(curr_node->key_attribute == NodeType::kTrafficSignal){
+          traffic_signals_.push_back(curr_node);
+        }
+
+        // foot_paths_
+        // roads_
+        // construction_
+
+        // Find neighbors of type Node
+        if(curr_node->edges){
+          for(auto neighbor: curr_node->edges->nodes){
+            if(neighbor->explored) continue;
+
+            curr_q.push(neighbor);          
+          } 
+        }
+      }
+      search_q = curr_q;
+    }
+    unsigned int total_features = stopsigns_.size() + crossings_.size() + traffic_signals_.size();
+    std::cout << "Number of features extracted wrt ego: " << total_features << "\n";
+    
+    return;
+
+
+  }
+  std::vector<Node*> OsmGraph::RetrieveStops(){
+    return stopsigns_;
+  }
+
+  std::vector<Node*> OsmGraph::RetrieveCrossings(){
+    return crossings_;
+  }
+
+  std::vector<Node*> OsmGraph::RetrieveTrafficSignals(){
+    return traffic_signals_;
+  }
 }

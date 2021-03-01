@@ -29,6 +29,9 @@ namespace gps_navigation{
     
     // Position estimated from GPS
     Node pose;
+    
+    // Closest node on graph
+    Node matched_pose;
 
     // Position estimated by IMU+GPS
     //double x_ego, y_ego, yaw_ego, prev_yaw_ego;
@@ -83,13 +86,13 @@ namespace gps_navigation{
       std::vector<Way*> ways_;
       
       // Stores all unique nodes of type 'crossing'
-      std::unordered_map<int, Node*> crossing_nodes_;
+      //std::unordered_map<int, Node*> crossing_nodes_;
 
       // Stores all unique nodes of type 'stop sign'
-      std::unordered_map<int, Node*> stop_nodes_;
+      //std::unordered_map<int, Node*> stop_nodes_;
 
       // Stores all unique nodes of type 'traffic signal'
-      std::unordered_map<int, Node*> traffic_signal_nodes_;
+      //std::unordered_map<int, Node*> traffic_signal_nodes_;
 
       // Stores all remaining and unique node definitions
       std::unordered_map<int, Node*> nodes_;
@@ -126,11 +129,17 @@ namespace gps_navigation{
       std::vector<Node*> Plan();
       
       /* Find node within planned trajectory closest to vehicle pose */
-      std::pair<int, Node*> FindClosestPlannedNode();
+      std::pair<unsigned int, Node*> FindClosestPlannedNode();
       
+      // Updates state of ego vehicle using GNSS and odom only
+      // returns a graph around vehicle
+      std::vector<Node*> GenerateSTGraph(double lat, double lon, double v);
+
       /* Updates state of ego vehicle as reported by GNSS, odom and IMU */
       std::tuple<bool, long, double, double, double> UpdateState(double lat, double lon, double v, double w_z, double a_x, double t);
 
+      
+      
     private:
       Map* osm_map_;
       EgoState state_;
