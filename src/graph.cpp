@@ -221,6 +221,7 @@ namespace gps_navigation{
         }
       }
       search_q = curr_q;
+      curr_k += 1;
     }
     unsigned int total_features = stopsigns_.size() + crossings_.size() + traffic_signals_.size();
     std::cout << "Number of features extracted wrt ego: " << total_features << "\n";
