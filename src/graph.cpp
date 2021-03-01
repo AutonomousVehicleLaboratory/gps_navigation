@@ -151,7 +151,7 @@ namespace gps_navigation{
     std::cout << "Graph disconnected"<< std::endl; 
     return shortest_path;
   }
-  void OsmGraph::FindRoadFeatures(Node* point, int k){
+  void OsmGraph::BFS(Node* point, int k){
 
     // Given a node point, find the k nearest neighbors 
     std::queue<Node*> search_q; 

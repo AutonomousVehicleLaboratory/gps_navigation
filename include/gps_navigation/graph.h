@@ -94,7 +94,7 @@ namespace gps_navigation{
 
       // Extracts k nearest neighbors given a point using BFS 
       // [pose | traversed | planned ]
-      void FindRoadFeatures(Node* point, int k);
+      void BFS(Node* point, int k);
 
       std::vector<Node*> RetrieveStops();
       std::vector<Node*> RetrieveCrossings();

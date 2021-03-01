@@ -37,7 +37,7 @@ namespace gps_navigation{
     //double x_ego, y_ego, yaw_ego, prev_yaw_ego;
     double x_ego, y_ego, next_yaw, current_yaw, sim_yaw;
 
-    // Velocities integrated from IMU
+    // Velocities integrated from Odom/IMU
     double v, v_x, v_y;
     bool pose_init = false;
     bool bearing_init = false;
@@ -68,6 +68,20 @@ namespace gps_navigation{
 
       /* Estimate shortest path between point1 and point2*/
       std::vector<Node*> ShortestPath(Node* point1, Node* point2);
+
+      // Wrapper for OsmGraph road feature search 
+      void FindRoadFeatures(Node* point, int k);
+
+      // Wrapper for returning OsmGraph stopsigns 
+      std::vector<Node*> GetStops();
+
+      // Wrapper for returning OsmGraph crossings 
+      std::vector<Node*> GetCrossings();
+
+      // Wrapper for returning OsmGraph traffic signals  
+      std::vector<Node*> GetTrafficSignals();
+
+      
 
       /* Return ways */
       std::vector<Way*> GetWays();
@@ -131,9 +145,11 @@ namespace gps_navigation{
       /* Find node within planned trajectory closest to vehicle pose */
       std::pair<unsigned int, Node*> FindClosestPlannedNode();
       
+      // 
       // Updates state of ego vehicle using GNSS and odom only
       // returns a graph around vehicle
-      std::vector<Node*> GenerateSTGraph(double lat, double lon, double v);
+      //std::vector<Node*> GenerateSTGraph(double lat, double lon, double v, double t);
+      void GenerateSTGraph(double lat, double lon, double v, double t);
 
       /* Updates state of ego vehicle as reported by GNSS, odom and IMU */
       std::tuple<bool, long, double, double, double> UpdateState(double lat, double lon, double v, double w_z, double a_x, double t);
@@ -143,6 +159,7 @@ namespace gps_navigation{
     private:
       Map* osm_map_;
       EgoState state_;
+      EgoState g_state_;
       Node* start_node_;
       Node* end_node_;
       //Node* current_node_;

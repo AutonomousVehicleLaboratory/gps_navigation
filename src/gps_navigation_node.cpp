@@ -110,7 +110,7 @@ namespace gps_navigation{
     if(gps_avail && plan.size()){
       ego_state = gps_navigator->UpdateState(lat_pose, lon_pose,  ego_speed, 
                                                                  twist.angular_velocity.z, twist.linear_acceleration.x, ros::Time::now().toSec());
-
+      //gps_navigator->GenerateSTGraph(lat_pose, lon_pose, ego_speed, ros::Time::now().toSec());
     }
     
     if(new_plan){

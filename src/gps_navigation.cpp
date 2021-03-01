@@ -310,6 +310,22 @@ namespace gps_navigation{
     return traj;
   } 
 
+  void Map::FindRoadFeatures(Node* point, int k){
+    osm_graph_.BFS(point, k);
+  }
+
+  std::vector<Node*> Map::GetStops(){
+    return osm_graph_.RetrieveStops();
+  }
+
+  std::vector<Node*> Map::GetCrossings(){
+    return osm_graph_.RetrieveCrossings();
+  }
+
+  std::vector<Node*> Map::GetTrafficSignals(){
+    return osm_graph_.RetrieveTrafficSignals();
+  }
+
   std::vector<Way*> Map::GetWays(){
     return ways_;
   }
@@ -401,11 +417,10 @@ namespace gps_navigation{
     return false;
   }
 
-  std::vector<Node*> GenerateSTGraph(double lat, double lon, double v){
+  void Navigation::GenerateSTGraph(double lat, double lon, double v, double t){
     
     std::vector<Node*> st_graph;
-    //st_graph = osm_graph_.GetNeighbors();
-
+    Node* veh_pose;
     // [pose | traversed | planned |
     //  crossings | stops | trafficsignals | footpaths | construction | road_network |]
     // Insert pose, traversed and planned nodes
@@ -413,24 +428,30 @@ namespace gps_navigation{
     // Get crossings, stops, traffic signals, footpaths, construction
     // Initialize states
 
+    //if(t_prev_ == -1){
+    //  g_state_.pose.lat = lat;
+    //  g_state_.pose.lon = lon;
+    //  t_prev = t;
+
+    //  return st_graph;
+    //}
     // If a new gps measurement is received
-    /*
-    if((lat != state_.pose.lat) && use_gps_){
-      state_.pose.lat = lat;
-      state_.pose.lon = lon;
+    if((lat != g_state_.pose.lat) && use_gps_){
+      g_state_.pose.lat = lat;
+      g_state_.pose.lon = lon;
 
       // Node and position of planned node closest to ego vehicle
-      std::pair<double, double> x_y_ego = RelativeDisplacement(ref_origin_, &state_.pose);
+      std::pair<double, double> x_y_ego = RelativeDisplacement(ref_origin_, &g_state_.pose);
 
       // Condition to set position/orientation using gps
-      double dist_diff = sqrt((x_y_ego.first - state_.x_ego)*(x_y_ego.first - state_.x_ego) + 
-                              (x_y_ego.second - state_.y_ego)*(x_y_ego.second - state_.y_ego));
+      double dist_diff = sqrt((x_y_ego.first - g_state_.x_ego)*(x_y_ego.first - g_state_.x_ego) + 
+                              (x_y_ego.second - g_state_.y_ego)*(x_y_ego.second - g_state_.y_ego));
       
       // If the new GPS location is too far from pose estimated by odometry 
       if(dist_diff >= 2.0 || t_prev_ == -1){
         // If this node does not contain orientation information
         if((start_node_->dx_dy.first == 0) && (start_node_->dx_dy.second == 0)){
-          return current_state;
+          return;
         }
         // Set position based on planned node closest to ego vehicle
         std::pair<unsigned int, Node*> planned_node = FindClosestPlannedNode();
@@ -442,14 +463,21 @@ namespace gps_navigation{
                                                                current_plan_[next_node_index_]);
         std::pair<double, double> dx_dy2 = RelativeDisplacement(ref_origin_, 
                                                                current_plan_[next_node_index_+1]);
-        state_.current_yaw = M_PI + atan2((dx_dy1.second - dx_dy2.second),
+        std::pair<double, double> dx_dy3 = RelativeDisplacement(ref_origin_, 
+                                                               current_plan_[next_node_index_+2]);
+        g_state_.current_yaw = M_PI + atan2((dx_dy1.second - dx_dy2.second),
                                (dx_dy1.first - dx_dy2.first));
+        g_state_.next_yaw = M_PI + atan2((dx_dy2.second - dx_dy3.second),
+                               (dx_dy2.first - dx_dy3.first));
         t_prev_ = t;
-        state_.x_ego = dx_dy1.first;
-        state_.y_ego = dx_dy1.second;
+        g_state_.x_ego = dx_dy1.first;
+        g_state_.y_ego = dx_dy1.second;
+        x_next_ = dx_dy2.first;
+        y_next_ = dx_dy2.second;
 
-        current_state = std::make_tuple(true, next_node_index_, state_.x_ego, state_.y_ego, state_.current_yaw); 
-        return current_state;
+        //veh_pose = current_plan_[next_node_index_];
+        //current_state = std::make_tuple(true, next_node_index_, g_state_.x_ego, g_state_.y_ego, g_state_.current_yaw); 
+        //return current_state;
       }
 
     }
@@ -459,47 +487,54 @@ namespace gps_navigation{
       double dd = 2*v*dt;
       t_prev_ = t;
       
-      //state_.yaw_ego += w_z * dt;
-      double dx = dd*cos(state_.current_yaw);
-      double dy = dd*sin(state_.current_yaw);
-      double predicted_x = state_.x_ego + dx;
-      double predicted_y = state_.y_ego + dy;
+      //g_state_.yaw_ego += w_z * dt;
+      double dx = dd*cos(g_state_.current_yaw);
+      double dy = dd*sin(g_state_.current_yaw);
+      double predicted_x = g_state_.x_ego + dx;
+      double predicted_y = g_state_.y_ego + dy;
       double dist_to_next = sqrt(pow(predicted_x - x_next_, 2) + pow(predicted_y - y_next_, 2));
       
       
       // Update vehicle state with respect to planned path
       // If distance to next predicted state is less than a threshold, update
       if(dist_to_next < 2.0){
-        //use_gps_ = false;
-        //if(abs(state_.next_yaw - state_.current_yaw) >= 0.08){
-        //  state_.sim_yaw += w_z * dt;
-        //}
         std::pair<double, double> dx_dy1 = RelativeDisplacement(ref_origin_, 
                                                                current_plan_[next_node_index_]);
         std::pair<double, double> dx_dy2 = RelativeDisplacement(ref_origin_, 
                                                                current_plan_[next_node_index_+1]);
-        state_.current_yaw = M_PI + atan2((dx_dy1.second - dx_dy2.second),
+        std::pair<double, double> dx_dy3 = RelativeDisplacement(ref_origin_, 
+                                                               current_plan_[next_node_index_+2]);
+        g_state_.current_yaw = M_PI + atan2((dx_dy1.second - dx_dy2.second),
                                (dx_dy1.first - dx_dy2.first));
+        g_state_.next_yaw = M_PI + atan2((dx_dy2.second - dx_dy3.second),
+                               (dx_dy2.first - dx_dy3.first));
 
         // Update starting pose
-        state_.x_ego = x_next_;
-        state_.y_ego = y_next_;
+        g_state_.x_ego = x_next_;
+        g_state_.y_ego = y_next_;
         // Update distance based on remaining distance
         dd -= dist_to_next;
         // Update orientation based on next waypoint
         next_node_index_ += 1;
+        x_next_ = dx_dy2.first; 
+        y_next_ = dx_dy2.second; 
+
       }
       
        
-      state_.x_ego += dd*cos(state_.current_yaw);
-      state_.y_ego += dd*sin(state_.current_yaw);
-      current_state = std::make_tuple(true, next_node_index_, state_.x_ego, state_.y_ego, state_.sim_yaw); 
+      //veh_pose = current_plan_[next_node_index_];
+
+      g_state_.x_ego += dd*cos(g_state_.current_yaw);
+      g_state_.y_ego += dd*sin(g_state_.current_yaw);
+      //current_state = std::make_tuple(true, next_node_index_, g_state_.x_ego, g_state_.y_ego, g_state_.sim_yaw); 
        
       
     }
+
     // TODO: Extract graph
-    */ 
-    return st_graph;
+    veh_pose = current_plan_[next_node_index_];
+    GetMap()->FindRoadFeatures(veh_pose, 20);
+
   }
 
   std::tuple<bool, long, double, double, double> Navigation::UpdateState(double lat, double lon, double v, double w_z, double a_x, double t){
