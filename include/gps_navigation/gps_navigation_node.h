@@ -37,10 +37,13 @@ namespace gps_navigation{
       void SpeedCallback(const std_msgs::Float64::ConstPtr& msg);
       void PublishGpsMap();
       visualization_msgs::Marker GetMarker(int marker_type, long id, ros::Time time, double x, double y, double z, double yaw);
+      
+      visualization_msgs::MarkerArray VisMarkersFromNodes(std::vector<Node*> nodes, int marker_type);
+
       nav_msgs::Path VisualizePath(std::vector<Node*> path);
       nav_msgs::Path VisualizeNetwork();
       
-      // Publishers and Subscribers   
+      // Publishers   
       ros::NodeHandle n;
       ros::Publisher shortest_path_viz;
       ros::Publisher road_network_viz;
@@ -50,7 +53,12 @@ namespace gps_navigation{
       ros::Publisher unrouted_bev_pub;
       ros::Publisher routed_bev_pub;
       ros::Publisher conc_bev_pub;
+
+      // Graph Based visualization
+      ros::Publisher g_stops_pub;
+      
   
+      // Subscribers
       ros::Subscriber gps_pose_sub;
       ros::Subscriber speed_sub;
       ros::Subscriber imu_sub;

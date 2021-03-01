@@ -20,6 +20,10 @@ namespace gps_navigation{
     unrouted_bev_pub = n.advertise<sensor_msgs::Image>("/unrouted_osm", 1000);
     routed_bev_pub = n.advertise<sensor_msgs::Image>("/routed_osm", 1000);
     conc_bev_pub = n.advertise<sensor_msgs::Image>("/concat_osm", 1000);
+
+    // Graph Based Visualization
+    g_stops_pub = n.advertise<visualization_msgs::MarkerArray>("/stop_signs", 10);
+
     gps_pose_sub = n.subscribe("/lat_lon", 1000, &GpsNavigationNode::GpsCallback, this);
     imu_sub = n.subscribe("/livox/imu", 1000, &GpsNavigationNode::ImuCallback, this);
     speed_sub = n.subscribe("/pacmod/as_tx/vehicle_speed", 1000, &GpsNavigationNode::SpeedCallback, this);
@@ -121,11 +125,26 @@ namespace gps_navigation{
   }
   void GpsNavigationNode::SpeedCallback(const std_msgs::Float64::ConstPtr& msg){
     ego_speed = msg->data;
+
+    if(gps_avail && plan.size()){
+      gps_navigator->GenerateSTGraph(lat_pose, lon_pose, ego_speed, ros::Time::now().toSec());
+    }
+    
   }
   
   void GpsNavigationNode::PublishGpsMap(){
     if(gps_avail && plan.size()){
 
+      // For graph generation method, visualize markers/paths
+      std::vector<Node*> stops = gps_navigator->GetMap()->GetStops(); 
+      std::vector<Node*> crossings = gps_navigator->GetMap()->GetStops(); 
+      std::vector<Node*> traffic_signals = gps_navigator->GetMap()->GetStops(); 
+
+      //
+      visualization_msgs::MarkerArray stop_markers = VisMarkersFromNodes(stops, 0); 
+      g_stops_pub.publish(stop_markers);
+
+      // For OSM bev
       if(std::get<0>(ego_state)){
         // Publish oriented ego vehicle
         visualization_msgs::Marker oriented_ego; 
@@ -222,6 +241,61 @@ namespace gps_navigation{
     return road_network; 
   }
   
+  visualization_msgs::MarkerArray GpsNavigationNode::VisMarkersFromNodes(std::vector<Node*> nodes, int marker_type){
+    visualization_msgs::MarkerArray markers;
+    visualization_msgs::Marker marker;
+    
+    int id = 0;
+    ros::Time current_t = ros::Time::now();
+    for(auto node: nodes){
+      marker.id = id;
+      marker.header.frame_id = "map";
+      marker.header.seq = 0;
+      marker.header.stamp = current_t;
+      marker.action = visualization_msgs::Marker::ADD;
+      tf2::Quaternion node_q;
+      double yaw = atan2(node->dx_dy.second, node->dx_dy.first);
+      std::pair<double, double> x_y = RelativeDisplacement(ref_start, node);
+
+      marker.pose.position.x = x_y.first;
+      marker.pose.position.y = x_y.second;
+      marker.pose.position.z = 0.0;
+      if(marker_type == 0){
+        marker.scale.x = 1.0;
+        marker.scale.y = 1.0;
+        marker.scale.z = 1.0;
+        marker.color.a = 1.0;
+        marker.color.r = 1.0;
+        marker.color.g = 1.0;
+        marker.color.b = 0.0;
+        marker.pose.orientation.x = 0.0;
+        marker.pose.orientation.y = 0.0;
+        marker.pose.orientation.z = 0.0;
+        marker.pose.orientation.w = 1.0;
+        marker.type = visualization_msgs::Marker::SPHERE;
+      }
+      //else if(marker_type == 1){
+      //  marker.scale.x = 1.0;
+      //  marker.scale.y = 0.5;
+      //  marker.scale.z = 0.5;
+      //  marker.color.a = 1.0;
+      //  marker.color.r = 0.74;
+      //  marker.color.g = 0.2;
+      //  marker.color.b = 0.92;
+      //  node_q.setRPY(0.0, 0.0, yaw);  
+      //  marker.pose.orientation.x = node_q[0];
+      //  marker.pose.orientation.y = node_q[1];
+      //  marker.pose.orientation.z = node_q[2];
+      //  marker.pose.orientation.w = node_q[3];
+      //  marker.type = visualization_msgs::Marker::ARROW;
+      //  
+      //}
+      markers.markers.push_back(marker);
+
+      ++id;
+    }
+    return markers;
+  }
   nav_msgs::Path GpsNavigationNode::VisualizeNetwork(){
     nav_msgs::Path road_network;
     //visualization_msgs::MarkerArray node_directions;

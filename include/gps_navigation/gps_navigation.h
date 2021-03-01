@@ -97,6 +97,7 @@ namespace gps_navigation{
       bool osm_status_;
 
       // Stores road networks: k=highway; v=unclassified/service/tertiary/residential
+      // (ways are composed of interpolated nodes)
       std::vector<Way*> ways_;
       
       // Stores all unique nodes of type 'crossing'
