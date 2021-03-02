@@ -23,6 +23,8 @@ namespace gps_navigation{
 
     // Graph Based Visualization
     g_stops_pub = n.advertise<visualization_msgs::MarkerArray>("/stop_signs", 10);
+    g_crossings_pub = n.advertise<visualization_msgs::MarkerArray>("/crossings", 10);
+    g_signals_pub = n.advertise<visualization_msgs::MarkerArray>("/traffic_signals", 10);
 
     gps_pose_sub = n.subscribe("/lat_lon", 1000, &GpsNavigationNode::GpsCallback, this);
     imu_sub = n.subscribe("/livox/imu", 1000, &GpsNavigationNode::ImuCallback, this);
@@ -137,12 +139,18 @@ namespace gps_navigation{
 
       // For graph generation method, visualize markers/paths
       std::vector<Node*> stops = gps_navigator->GetMap()->GetStops(); 
-      std::vector<Node*> crossings = gps_navigator->GetMap()->GetStops(); 
-      std::vector<Node*> traffic_signals = gps_navigator->GetMap()->GetStops(); 
+      std::vector<Node*> crossings = gps_navigator->GetMap()->GetCrossings(); 
+      std::vector<Node*> signals = gps_navigator->GetMap()->GetTrafficSignals(); 
+      //std::vector<Node*> crossings = gps_navigator->GetMap()->GetStops(); 
+      //std::vector<Node*> traffic_signals = gps_navigator->GetMap()->GetStops(); 
 
       //
-      visualization_msgs::MarkerArray stop_markers = VisMarkersFromNodes(stops, 0); 
+      visualization_msgs::MarkerArray stop_markers = VisMarkersFromNodes(stops, 0, 1.0, 1.0, 0.0); 
+      visualization_msgs::MarkerArray crossing_markers= VisMarkersFromNodes(crossings, 0, 0.0, 1.0, 1.0); 
+      visualization_msgs::MarkerArray signal_markers= VisMarkersFromNodes(signals, 0, 1.0, 0.5, 0.0); 
       g_stops_pub.publish(stop_markers);
+      g_crossings_pub.publish(crossing_markers);
+      g_signals_pub.publish(signal_markers);
 
       // For OSM bev
       if(std::get<0>(ego_state)){
@@ -241,7 +249,7 @@ namespace gps_navigation{
     return road_network; 
   }
   
-  visualization_msgs::MarkerArray GpsNavigationNode::VisMarkersFromNodes(std::vector<Node*> nodes, int marker_type){
+  visualization_msgs::MarkerArray GpsNavigationNode::VisMarkersFromNodes(std::vector<Node*> nodes, int marker_type, float color_r, float color_g, float color_b){
     visualization_msgs::MarkerArray markers;
     visualization_msgs::Marker marker;
     
@@ -250,7 +258,7 @@ namespace gps_navigation{
     for(auto node: nodes){
       marker.id = id;
       marker.header.frame_id = "map";
-      marker.header.seq = 0;
+      marker.header.seq = id;
       marker.header.stamp = current_t;
       marker.action = visualization_msgs::Marker::ADD;
       tf2::Quaternion node_q;
@@ -265,9 +273,9 @@ namespace gps_navigation{
         marker.scale.y = 1.0;
         marker.scale.z = 1.0;
         marker.color.a = 1.0;
-        marker.color.r = 1.0;
-        marker.color.g = 1.0;
-        marker.color.b = 0.0;
+        marker.color.r = color_r;
+        marker.color.g = color_g;
+        marker.color.b = color_b;
         marker.pose.orientation.x = 0.0;
         marker.pose.orientation.y = 0.0;
         marker.pose.orientation.z = 0.0;

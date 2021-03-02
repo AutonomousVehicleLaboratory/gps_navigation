@@ -18,7 +18,7 @@
 #include <tf/transform_datatypes.h>
 namespace gps_navigation{
   
-  enum class NodeType { kStopSign, kTrafficSignal, kCrossing, kRoad, kOther }; 
+  enum class NodeType { kOther, kTrafficSignal, kStopSign, kCrossing, kRoad }; 
   enum class WayType { kPlanned, kTraversed, kFootPath, kConstruction }; 
   
   struct Node;
@@ -45,7 +45,7 @@ namespace gps_navigation{
     bool explored = false;
 
     // Node attributes
-    NodeType key_attribute;
+    NodeType key_attribute = NodeType::kOther;
     std::vector<std::pair<std::string, std::string>> attributes;
 
     // Other Associated Ways

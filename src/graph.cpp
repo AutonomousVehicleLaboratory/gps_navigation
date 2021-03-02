@@ -223,8 +223,10 @@ namespace gps_navigation{
       search_q = curr_q;
       curr_k += 1;
     }
-    unsigned int total_features = stopsigns_.size() + crossings_.size() + traffic_signals_.size();
-    std::cout << "Number of features extracted wrt ego: " << total_features << "\n";
+    //unsigned int total_features = stopsigns_.size() + crossings_.size() + traffic_signals_.size();
+    std::cout << "Number of stop signs: " << stopsigns_.size() << "\n";
+    std::cout << "Number of crossings: " << crossings_.size() << "\n";
+    std::cout << "Number of traffic signals: " << traffic_signals_.size() << "\n";
     
     return;
 

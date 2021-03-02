@@ -38,7 +38,7 @@ namespace gps_navigation{
       void PublishGpsMap();
       visualization_msgs::Marker GetMarker(int marker_type, long id, ros::Time time, double x, double y, double z, double yaw);
       
-      visualization_msgs::MarkerArray VisMarkersFromNodes(std::vector<Node*> nodes, int marker_type);
+      visualization_msgs::MarkerArray VisMarkersFromNodes(std::vector<Node*> nodes, int marker_type, float color_r, float color_g, float color_b);
 
       nav_msgs::Path VisualizePath(std::vector<Node*> path);
       nav_msgs::Path VisualizeNetwork();
@@ -56,6 +56,8 @@ namespace gps_navigation{
 
       // Graph Based visualization
       ros::Publisher g_stops_pub;
+      ros::Publisher g_crossings_pub;
+      ros::Publisher g_signals_pub;
       
   
       // Subscribers
