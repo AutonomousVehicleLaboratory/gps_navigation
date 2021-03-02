@@ -161,4 +161,123 @@ namespace gps_navigation{
     std::cout << "Graph disconnected"<< std::endl; 
     //return shortest_path;
   }
+  bool lesserKDNodeLat(KDNode* n1, KDNode* n2) { 
+    if(n1->lat == n2->lat) {
+      return n1->lon < n2->lon;
+    }
+    return n1->lat < n2->lat;
+  }
+  bool lesserKDNodeLon(KDNode* n1, KDNode* n2) {
+    if(n1->lon == n2->lon) {
+      return n1->lat < n2->lat;
+    }
+    return n1->lon < n2->lon;
+  }
+  
+  // No ties for indices
+  bool ltLatInd(KDNode* n1, KDNode* n2) {
+    return n1->lat_ind < n2->lat_ind;
+  }
+  bool ltLonInd(KDNode* n1, KDNode* n2) {
+    return n1->lon_ind < n2->lon_ind;
+  }
+  // Finds the median of an unsorted list of KDNode indexed tuples based on the level to be searched recursively
+  // Linear median of medians algorithm
+  KDNode* linearMedian(std::vector<KDNode*> unsorted, bool lat_level) {
+    if(unsorted.size() == 1) {
+      return unsorted[0];
+    }
+    vector<KDNode*> intermediate;
+    
+    // Split it into length segments of 5, find their medians manually, recurse 
+    for(unsigned int i = 0; i < unsorted.size()/5; i += 5) { // Could leave a segment at the end of length < 5
+      vector<KDNode*> sorted;
+      if(lat_level) {
+        sorted = (std::sort(unsorted.begin()+(5*i), unsorted.begin()+(5*i+4), ltLatInd));
+        intermediate.push_back(sorted[2]);
+      } else {
+        sorted = (std::sort(unsorted.begin()+(5*i), unsorted.begin()+(5*i+4), ltLonInd));  
+        intermediate.push_back(sorted[2]);
+      }
+    }
+    // Deal with the remaining segment of < 5 here and return that median as well to intermediate
+    if(5*intermediate.size() < unsorted.size()) {
+      vector<KDNode*> sorted;
+      unsigned int lastseglength = unsorted.size() - (5*intermediate.size());
+      if(lat_level) {
+        sorted = (std::sort(unsorted.begin()+intermediate.size(), unsorted.end(), ltLatInd));
+      } else {
+        sorted = (std::sort(unsorted.begin()+intermediate.size(), unsorted.end(), ltLonInd));
+      }
+      intermediate.push_back(sorted[lastseglength/2]);
+    }
+    return linearMedian(intermediate, !lat_level);
+  }
+  NNGraph(){
+  }
+  void NNGraph::Insert(Node* osm_node) {
+    // Make top level lat, second level lon
+  }
+  
+  // O(knlogn) algorithm to build KD tree (k sorts, nlogn building algorithm)
+  KDNode* Partition(vector<KDNode*> children, bool lat_level) {
+    // TODO: Base cases, empty children list
+    if(!children.size()) {
+      return NULL;
+    }
+    // Given a list of nodes, find the midpoint of children, recurse into left, right and return midpoint for assignment
+    KDNode* median = linearMedian(children, lat_level);
+    // TODO: Build left and right children arrays
+    vector<KDNode*> lt;
+    vector<KDNode*> gt;
+    for(unsigned int i = 0; i < children.size(); i++) {
+      if(lat_level) {
+        if(ltLatInd(median, children[i])) {
+          gt.push_back(children[i]);
+        } else {
+          lt.push_back(children[i]);
+        }
+      } else {
+        if(ltLonInd(median, children[i])) {
+          gt.push_back(children[i]);
+        } else {
+          lt.push_back(children[i]);
+        }
+      }
+    }
+    median->left = Partition(lt, !lat_level);
+    median->right = Partition(gt, !lat_level);
+    return median;
+    // BASE CASE: If len children <= 2 then 
+  }
+  void NNGraph::Generate(std::unordered_map<int, Node*> node_table, KDNode** root) {
+    // Utilize OSM Graph implementation (Wrap nodes in a K-D structure before adding), iterate through table
+    vector<KDNode*> node_array;
+    vector<KDNode*> lat_sorted;
+    vector<KDNode*> lon_sorted;
+    
+    for (auto it : node_table) {
+      node_array.push_back(new KDNode(it.second));
+    }
+    // Populate lat and lon integer indices to make sorting easier
+    lat_sorted = std::sort(node_array.begin(), node_array.end(), lesserKDNodeLat);
+    lon_sorted = std::sort(node_array.begin(), node_array.end(), lesserKDNodeLon);
+    for (unsigned int i = 0; i < lat_sorted.size(); i++) {
+      lat_sorted[i]->lat_ind = i;
+    }
+    for (unsigned int i = 0; i < lon_sorted.size(); i++) {
+      lon_sorted[i]->lon_ind = i;
+    }
+    // Make it as balanced as possible
+    // Potential point of improvement: make the latitude median calculations O(1) vs O(n) since the passed list is sorted by latitude
+    *root = Partition(lat_sorted, true);
+    
+  }
+  // Recursive, returns nearest neighbor in the tree (start with lat_level = true)
+  KDNode * NearestNeighbor(KDNode* root, Node* ego_location, bool lat_level) {
+    // Base case, reached leaf
+    if(!root) {
+    }
+  }
+  
 }

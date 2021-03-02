@@ -26,7 +26,7 @@ namespace gps_navigation{
     clicked_point = n.subscribe("/move_base_simple/goal", 1000, &GpsNavigationNode::ClickedPointCallback, this);
     
     // Initialize map
-    std::string osm_path = "/home/avl-robot/DPGN/dpgn_models/osm/ucsd.osm";
+    std::string osm_path = "/mnt/avl_shared/avl_shared/user-files/dpaz/DPGN/ucsd.osm";
     //osm_map = new Map(osm_path);
     gps_navigator = new Navigation(osm_path, kOsmOriginX, kOsmOriginY);
     //osm_bev = new GpsBev(osm_map->ways_, kOsmOriginX, kOsmOriginY, 0.5, 2, 200);
