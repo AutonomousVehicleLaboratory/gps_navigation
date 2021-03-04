@@ -162,16 +162,16 @@ namespace gps_navigation{
     //return shortest_path;
   }
   bool lesserKDNodeLat(KDNode* n1, KDNode* n2) { 
-    if(n1->lat == n2->lat) {
-      return n1->lon < n2->lon;
+    if(n1->osm_node->lat == n2->osm_node->lat) {
+      return n1->osm_node->lon < n2->osm_node->lon;
     }
-    return n1->lat < n2->lat;
+    return n1->osm_node->lat < n2->osm_node->lat;
   }
   bool lesserKDNodeLon(KDNode* n1, KDNode* n2) {
-    if(n1->lon == n2->lon) {
-      return n1->lat < n2->lat;
+    if(n1->osm_node->lon == n2->osm_node->lon) {
+      return n1->osm_node->lat < n2->osm_node->lat;
     }
-    return n1->lon < n2->lon;
+    return n1->osm_node->lon < n2->osm_node->lon;
   }
   
   // No ties for indices
@@ -187,40 +187,38 @@ namespace gps_navigation{
     if(unsorted.size() == 1) {
       return unsorted[0];
     }
-    vector<KDNode*> intermediate;
+    std::vector<KDNode*> intermediate;
     
     // Split it into length segments of 5, find their medians manually, recurse 
-    for(unsigned int i = 0; i < unsorted.size()/5; i += 5) { // Could leave a segment at the end of length < 5
-      vector<KDNode*> sorted;
+    for(unsigned int i = 0; i < unsorted.size()/5; i++) { // Could leave a segment at the end of length < 5
       if(lat_level) {
-        sorted = (std::sort(unsorted.begin()+(5*i), unsorted.begin()+(5*i+4), ltLatInd));
-        intermediate.push_back(sorted[2]);
+        std::sort(unsorted.begin()+(5*i), unsorted.begin()+(5*i+5), ltLatInd);
+        intermediate.push_back(unsorted[5*i+2]);
       } else {
-        sorted = (std::sort(unsorted.begin()+(5*i), unsorted.begin()+(5*i+4), ltLonInd));  
-        intermediate.push_back(sorted[2]);
+        std::sort(unsorted.begin()+(5*i), unsorted.begin()+(5*i+5), ltLonInd);  
+        intermediate.push_back(unsorted[5*i+2]);
       }
     }
     // Deal with the remaining segment of < 5 here and return that median as well to intermediate
     if(5*intermediate.size() < unsorted.size()) {
-      vector<KDNode*> sorted;
       unsigned int lastseglength = unsorted.size() - (5*intermediate.size());
       if(lat_level) {
-        sorted = (std::sort(unsorted.begin()+intermediate.size(), unsorted.end(), ltLatInd));
+        std::sort(unsorted.begin()+intermediate.size(), unsorted.end(), ltLatInd);
       } else {
-        sorted = (std::sort(unsorted.begin()+intermediate.size(), unsorted.end(), ltLonInd));
+        std::sort(unsorted.begin()+intermediate.size(), unsorted.end(), ltLonInd);
       }
-      intermediate.push_back(sorted[lastseglength/2]);
+      intermediate.push_back(unsorted[5*intermediate.size()+lastseglength/2]);
     }
     return linearMedian(intermediate, !lat_level);
   }
-  NNGraph(){
+  NNGraph::NNGraph(){
   }
   void NNGraph::Insert(Node* osm_node) {
     // Make top level lat, second level lon
   }
   
   // O(knlogn) algorithm to build KD tree (k sorts, nlogn building algorithm)
-  KDNode* Partition(vector<KDNode*> children, bool lat_level) {
+  KDNode* NNGraph::Partition(std::vector<KDNode*> children, bool lat_level) {
     // TODO: Base cases, empty children list
     if(!children.size()) {
       return NULL;
@@ -228,8 +226,8 @@ namespace gps_navigation{
     // Given a list of nodes, find the midpoint of children, recurse into left, right and return midpoint for assignment
     KDNode* median = linearMedian(children, lat_level);
     // TODO: Build left and right children arrays
-    vector<KDNode*> lt;
-    vector<KDNode*> gt;
+    std::vector<KDNode*> lt;
+    std::vector<KDNode*> gt;
     for(unsigned int i = 0; i < children.size(); i++) {
       if(lat_level) {
         if(ltLatInd(median, children[i])) {
@@ -248,36 +246,36 @@ namespace gps_navigation{
     median->left = Partition(lt, !lat_level);
     median->right = Partition(gt, !lat_level);
     return median;
-    // BASE CASE: If len children <= 2 then 
   }
-  void NNGraph::Generate(std::unordered_map<int, Node*> node_table, KDNode** root) {
+  void NNGraph::Generate(std::unordered_map<int, Node*> node_table) {
     // Utilize OSM Graph implementation (Wrap nodes in a K-D structure before adding), iterate through table
-    vector<KDNode*> node_array;
-    vector<KDNode*> lat_sorted;
-    vector<KDNode*> lon_sorted;
+    std::vector<KDNode*> node_array;
     
     for (auto it : node_table) {
       node_array.push_back(new KDNode(it.second));
     }
     // Populate lat and lon integer indices to make sorting easier
-    lat_sorted = std::sort(node_array.begin(), node_array.end(), lesserKDNodeLat);
-    lon_sorted = std::sort(node_array.begin(), node_array.end(), lesserKDNodeLon);
-    for (unsigned int i = 0; i < lat_sorted.size(); i++) {
-      lat_sorted[i]->lat_ind = i;
+    std::sort(node_array.begin(), node_array.end(), lesserKDNodeLat);
+    for (unsigned int i = 0; i < node_array.size(); i++) {
+      node_array[i]->lat_ind = i;
     }
-    for (unsigned int i = 0; i < lon_sorted.size(); i++) {
-      lon_sorted[i]->lon_ind = i;
+    std::sort(node_array.begin(), node_array.end(), lesserKDNodeLon);
+    for (unsigned int i = 0; i < node_array.size(); i++) {
+      node_array[i]->lon_ind = i;
     }
     // Make it as balanced as possible
-    // Potential point of improvement: make the latitude median calculations O(1) vs O(n) since the passed list is sorted by latitude
-    *root = Partition(lat_sorted, true);
+    // Potential point of improvement: make the lon median calculations O(1) vs O(n) since the passed list is sorted by lon
+    this->root = Partition(node_array, true);
     
   }
   // Recursive, returns nearest neighbor in the tree (start with lat_level = true)
-  KDNode * NearestNeighbor(KDNode* root, Node* ego_location, bool lat_level) {
+  KDNode * NNGraph::NearestNeighbor(KDNode* root, Node* ego_location, bool lat_level) {
     // Base case, reached leaf
     if(!root) {
+      // TODO: Make the node call this function with the current GPS Lat/Lon as the parameter 
+      // OR: Make a non-recursive wrapper function to call this
     }
+    return NULL;
   }
   
 }

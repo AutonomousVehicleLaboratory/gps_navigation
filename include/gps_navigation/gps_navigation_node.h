@@ -47,6 +47,7 @@ namespace gps_navigation{
       ros::Publisher node_orientation_viz;
       ros::Publisher gps_viz_pub;
       ros::Publisher gps_closest_viz_pub;
+      ros::Publisher kd_nearest_viz_pub;
       ros::Publisher unrouted_bev_pub;
       ros::Publisher routed_bev_pub;
       ros::Publisher conc_bev_pub;

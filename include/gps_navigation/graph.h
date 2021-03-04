@@ -64,31 +64,31 @@ namespace gps_navigation{
 
   };
   class KDNode {
-    KDNode(Node * osm_node) {
-      this.osm_node = osm_node;
-      this.lat_level = lat_level;
-      this.left = NULL;
-      this.right = NULL;
-    }
-    Node * osm_node;
-    KDNode * left;
-    KDNode * right;
-    unsigned int lat_ind; // Latitude tuple
-    unsigned int lon_ind; // Longitude tuple
-  }
+    public:
+      KDNode(Node * osm_node) {
+        this->osm_node = osm_node;
+        this->left = NULL;
+        this->right = NULL;
+      }
+      Node * osm_node;
+      KDNode * left;
+      KDNode * right;
+      unsigned int lat_ind; // Latitude tuple
+      unsigned int lon_ind; // Longitude tuple
+  };
   bool lesserKDNodeLat(KDNode* n1, KDNode* n2);
   bool lesserKDNodeLon(KDNode* n1, KDNode* n2);
   bool ltLatInd(KDNode* n1, KDNode* n2);
   bool ltLonInd(KDNode* n1, KDNode* n2);
-  public KDNode* linearMedian(std::vector<KDNode*> unsorted, bool lat_level);
+  KDNode* linearMedian(std::vector<KDNode*> unsorted, bool lat_level);
   class NNGraph {
     public:
       NNGraph();
       KDNode* root = NULL;
-      void Generate(std::unordered_map<int, Node*> node_table, KDNode** root);
+      void Generate(std::unordered_map<int, Node*> node_table);
       void Insert(Node* osm_node);
-      KDNode* Partition(vector<KDNode*> children, bool lat_level); // Recursive partition function
+      KDNode* Partition(std::vector<KDNode*> children, bool lat_level); // Recursive partition function
       KDNode* NearestNeighbor(KDNode* root, Node* ego_location, bool lat_level);
-  }
+  };
 }
 #endif

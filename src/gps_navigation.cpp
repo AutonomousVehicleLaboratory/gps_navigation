@@ -30,6 +30,9 @@ namespace gps_navigation{
     // Define OSM graph
     osm_graph_ = OsmGraph();
     osm_graph_.Generate(ways_, navigation_nodes_);
+    // Define KD tree
+    nn_graph_ = NNGraph();
+    nn_graph_.Generate(navigation_nodes_);
     
   }
 

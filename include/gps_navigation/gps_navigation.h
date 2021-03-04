@@ -65,6 +65,7 @@ namespace gps_navigation{
       std::unordered_map<int, Node*> nodes_;
       std::unordered_map<int, Node*> navigation_nodes_;
       OsmGraph osm_graph_;
+      NNGraph nn_graph_;
 
       std::vector<Node*> ExtractNodes(int start_node_id, int end_node_id);
   };
