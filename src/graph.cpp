@@ -184,6 +184,7 @@ namespace gps_navigation{
   // Finds the median of an unsorted list of KDNode indexed tuples based on the level to be searched recursively
   // Linear median of medians algorithm
   KDNode* linearMedian(std::vector<KDNode*> unsorted, bool lat_level) {
+    //std::cout << unsorted.size() << std::endl;
     if(unsorted.size() == 1) {
       return unsorted[0];
     }
@@ -209,7 +210,9 @@ namespace gps_navigation{
       }
       intermediate.push_back(unsorted[5*intermediate.size()+lastseglength/2]);
     }
-    return linearMedian(intermediate, !lat_level);
+    KDNode* result = linearMedian(intermediate, lat_level);
+    std::cout << result->lat_ind << std::endl;
+    return result;
   }
   NNGraph::NNGraph(){
   }
@@ -225,6 +228,7 @@ namespace gps_navigation{
     }
     // Given a list of nodes, find the midpoint of children, recurse into left, right and return midpoint for assignment
     KDNode* median = linearMedian(children, lat_level);
+    //std::cout << median->lon_ind << std::endl;
     // TODO: Build left and right children arrays
     std::vector<KDNode*> lt;
     std::vector<KDNode*> gt;
@@ -234,6 +238,7 @@ namespace gps_navigation{
           gt.push_back(children[i]);
         } else {
           lt.push_back(children[i]);
+          //std::cout << children[i]->lat_ind << std::endl;
         }
       } else {
         if(ltLonInd(median, children[i])) {
@@ -243,8 +248,12 @@ namespace gps_navigation{
         }
       }
     }
+    //std::cout << children.size() << std::endl;
+    //std::cout << gt.size() << std::endl;
+    //std::cout << gt.s << std::endl;
     median->left = Partition(lt, !lat_level);
     median->right = Partition(gt, !lat_level);
+    median->split = lat_level ? median->osm_node->lat : median->osm_node->lon;
     return median;
   }
   void NNGraph::Generate(std::unordered_map<int, Node*> node_table) {
@@ -252,12 +261,14 @@ namespace gps_navigation{
     std::vector<KDNode*> node_array;
     
     for (auto it : node_table) {
+      //std::cout << it.second << std::endl;
       node_array.push_back(new KDNode(it.second));
     }
+    std::cout << " Created KD Node Array" << std::endl;
     // Populate lat and lon integer indices to make sorting easier
     std::sort(node_array.begin(), node_array.end(), lesserKDNodeLat);
     for (unsigned int i = 0; i < node_array.size(); i++) {
-      node_array[i]->lat_ind = i;
+      node_array[i]->lat_ind = i; // Find issue here (lat/lon_inds look way off, skewing KD development)
     }
     std::sort(node_array.begin(), node_array.end(), lesserKDNodeLon);
     for (unsigned int i = 0; i < node_array.size(); i++) {
@@ -268,14 +279,56 @@ namespace gps_navigation{
     this->root = Partition(node_array, true);
     
   }
+  
   // Recursive, returns nearest neighbor in the tree (start with lat_level = true)
-  KDNode * NNGraph::NearestNeighbor(KDNode* root, Node* ego_location, bool lat_level) {
+  // O(2^d + log(n)) where d is depth of tree
+  void NNGraph::NearestNeighbor(KDNode* root, KDNode* ego_location, bool lat_level) {
     // Base case, reached leaf
-    if(!root) {
+    if(!root->left && !root->right) {
+      double dist = GreatCircleDistance(root->osm_node, ego_location->osm_node);
+      if(dist < this->best_dist) {
+        this->best_dist = dist;
+        this->best = root;
+      }
+      return;
       // TODO: Make the node call this function with the current GPS Lat/Lon as the parameter 
-      // OR: Make a non-recursive wrapper function to call this
     }
-    return NULL;
+    if(lat_level) { // Latitude split
+      if(lesserKDNodeLat(ego_location, root)) { // Left
+        NearestNeighbor(root->left, ego_location, !lat_level);
+        if(ego_location->osm_node->lat + this->best_dist >= root->split) { // Right tree could be better
+          NearestNeighbor(root->right, ego_location, !lat_level);
+        }
+      } else { // Right
+        NearestNeighbor(root->right, ego_location, !lat_level);
+        if(ego_location->osm_node->lat - this->best_dist <= root->split) { // Left tree could be better
+          NearestNeighbor(root->left, ego_location, !lat_level);
+        }    
+      }
+    } else { // Longitude split
+      if(lesserKDNodeLon(ego_location, root)) { // Left
+        NearestNeighbor(root->left, ego_location, !lat_level);
+        if(ego_location->osm_node->lon + this->best_dist >= root->split) { // Right tree could be better
+          NearestNeighbor(root->right, ego_location, !lat_level);
+        }
+      } else { // Right
+        NearestNeighbor(root->right, ego_location, !lat_level);
+        if(ego_location->osm_node->lon - this->best_dist <= root->split) { // Left tree could be better
+          NearestNeighbor(root->left, ego_location, !lat_level);
+        }    
+      }
+    }
+    double dist = GreatCircleDistance(root->osm_node, ego_location->osm_node);
+    if(dist < this->best_dist) { // Parent node is better case
+      this->best_dist = dist;
+      this->best = root;
+    }
+  }
+  Node* NNGraph::KDNearest(Node* ego_location) {
+    this->best_dist = INFINITY;
+    this->best = NULL;
+    this->NearestNeighbor(this->root, new KDNode(ego_location), true);
+    return this->best->osm_node; 
   }
   
 }

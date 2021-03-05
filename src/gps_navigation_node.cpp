@@ -12,7 +12,7 @@
 
 namespace gps_navigation{
   GpsNavigationNode::GpsNavigationNode(){
-    kd_nearest_viz_pub = n.advertise<nav_messages::Marker>("/kd_nearest", 1000);
+    kd_nearest_viz_pub = n.advertise<visualization_msgs::Marker>("/kd_nearest", 1000);
     shortest_path_viz = n.advertise<nav_msgs::Path>("/shortest_path", 1000);
     road_network_viz = n.advertise<nav_msgs::Path>("/road_network", 1000);
     node_orientation_viz = n.advertise<visualization_msgs::Marker>("/node_orientations", 1000);

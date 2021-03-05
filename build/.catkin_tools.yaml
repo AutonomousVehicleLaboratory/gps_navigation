@@ -1,0 +1,6 @@
+devel_space: /home/users/astronomity/gps_ws/src/gps_navigation/devel
+install: false
+install_space: /home/users/astronomity/gps_ws/src/gps_navigation/install
+profile: default
+source_space: /home/users/astronomity/gps_ws/src/gps_navigation/src
+workspace: /home/users/astronomity/gps_ws/src/gps_navigation

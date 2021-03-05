@@ -73,6 +73,7 @@ namespace gps_navigation{
       Node * osm_node;
       KDNode * left;
       KDNode * right;
+      double split;
       unsigned int lat_ind; // Latitude tuple
       unsigned int lon_ind; // Longitude tuple
   };
@@ -85,10 +86,13 @@ namespace gps_navigation{
     public:
       NNGraph();
       KDNode* root = NULL;
+      KDNode* best = NULL;
+      double best_dist = INFINITY;
       void Generate(std::unordered_map<int, Node*> node_table);
       void Insert(Node* osm_node);
       KDNode* Partition(std::vector<KDNode*> children, bool lat_level); // Recursive partition function
-      KDNode* NearestNeighbor(KDNode* root, Node* ego_location, bool lat_level);
+      void NearestNeighbor(KDNode* root, KDNode* ego_location, bool lat_level);
+      Node* KDNearest (Node* ego_location);
   };
 }
 #endif

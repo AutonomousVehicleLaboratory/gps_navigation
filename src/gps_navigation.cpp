@@ -30,9 +30,11 @@ namespace gps_navigation{
     // Define OSM graph
     osm_graph_ = OsmGraph();
     osm_graph_.Generate(ways_, navigation_nodes_);
+    std::cout << " Generated OSM graph" << std::endl;
     // Define KD tree
     nn_graph_ = NNGraph();
     nn_graph_.Generate(navigation_nodes_);
+    std::cout << " Generated KD Tree" << std::endl;
     
   }
 
