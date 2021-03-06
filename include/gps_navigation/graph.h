@@ -19,7 +19,7 @@
 namespace gps_navigation{
   
   enum class NodeType { kOther, kTrafficSignal, kStopSign, kCrossing, kRoad }; 
-  enum class WayType { kPlanned, kTraversed, kFootPath, kConstruction }; 
+  enum class WayType { kOther, kRoad, kPlanned, kTraversed, kFootPath, kConstruction }; 
   
   struct Node;
   struct Edge;
@@ -30,7 +30,12 @@ namespace gps_navigation{
     long graph_id = -1;
     double lat;
     double lon;
+
+    // Edges based on traversability/connectivity 
     Edge* edges = NULL;
+
+    // Edges to nearby elements 
+    Edge* implicit_edges = NULL;
     
 
     // Orientation
@@ -88,7 +93,9 @@ namespace gps_navigation{
 
       std::vector<Node*> explored_;
 
+      // Generates connections for main roads
       void Generate(std::vector<Way*> ways, std::unordered_map<int, Node*> node_table);
+
       void ResetGraph(std::unordered_map<int, Node*> node_table);
       std::stack<Node*> Dijkstra(Node* point1, Node* point2);
 

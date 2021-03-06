@@ -71,6 +71,27 @@ namespace gps_navigation{
             end_node->second->edges->distances.push_back(dist);
           }
         }
+        else{
+          // TODO: verify
+          // Perform an implicit end_node->start_node edge connection (used for finding road elements) 
+          node_exists = false;
+          if(end_node->second->implicit_edges != NULL){
+            for(unsigned int k=0;k<end_node->second->implicit_edges->nodes.size(); k++){
+              if(end_node->second->implicit_edges->nodes[k]->graph_id == start_node_id){
+                node_exists = true;
+                break;
+              } 
+            }
+          }
+          if(!node_exists){
+            if(end_node->second->implicit_edges == NULL){
+              end_node->second->implicit_edges = new Edge;
+            }
+            end_node->second->implicit_edges->nodes.push_back(start_node->second);
+            end_node->second->implicit_edges->distances.push_back(dist);
+          }
+
+        }
         
       }
     }  

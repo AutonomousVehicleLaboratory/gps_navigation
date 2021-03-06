@@ -114,8 +114,9 @@ namespace gps_navigation{
     }
 
     if(gps_avail && plan.size()){
-      ego_state = gps_navigator->UpdateState(lat_pose, lon_pose,  ego_speed, 
-                                                                 twist.angular_velocity.z, twist.linear_acceleration.x, ros::Time::now().toSec());
+      // TODO: 
+      //ego_state = gps_navigator->UpdateState(lat_pose, lon_pose,  ego_speed, 
+      //                                                           twist.angular_velocity.z, twist.linear_acceleration.x, ros::Time::now().toSec());
       gps_navigator->GenerateSTGraph(lat_pose, lon_pose, ego_speed, ros::Time::now().toSec());
     }
     
@@ -153,6 +154,8 @@ namespace gps_navigation{
       g_signals_pub.publish(signal_markers);
 
       // For OSM bev
+      // TODO:
+      /*
       if(std::get<0>(ego_state)){
         // Publish oriented ego vehicle
         visualization_msgs::Marker oriented_ego; 
@@ -177,6 +180,7 @@ namespace gps_navigation{
         routed_bev_pub.publish(routed_osm_bev_msg);
         
       }
+      */
     }
   }
   visualization_msgs::Marker GpsNavigationNode::GetMarker(int marker_type, long id, ros::Time ts, double x, double y, double z, double yaw){

@@ -138,6 +138,7 @@ namespace gps_navigation{
     nd = way_element->FirstChildElement("nd");
     bool is_oneway = false;
     bool way_valid = false;
+    WayType way_type = WayType::kOther;
     std::string k, v;
  
     // For current way, check if any of its tags are relevant for driving scenarios
@@ -150,78 +151,118 @@ namespace gps_navigation{
         is_oneway = true;
         //std::cout << "found a oneway road" << std::endl;
       }
-      if( (k == "highway" && v == "unclassified") ||
-          (k == "highway" && v == "service") ||
-          (k == "highway" && v == "tertiary") ||
-          (k == "highway" && v == "residential")) {
-        //std::cout << "found way: " << way_id << std::endl;
-        way_valid = true;
-         
+      if (k == "highway") {
+        // Main roads
+        if( (v == "unclassified") || (v == "service") ||
+            (v == "tertiary") || (v == "residential")) {
+          way_valid = true;
+          way_type = WayType::kRoad;
+        }
+        else if( v == "footway"){
+          // Pedestrian walkways
+          way_valid = true;
+          way_type = WayType::kFootPath;
+        }
       }
-      // TODO: for footpaths, tag nodes associated with a footpath way
-      // TODO: for construction, find closest nodes do it and tag nodes associated with construction
+      
+      // Construction areas
+      if (k == "construction"){
+         way_type = WayType::kConstruction;
+         way_valid = true;
+      }
+        
+      
       
     }
 
     // Find road way's corresponding nodes
     // Interpolate nodes and assign new ids (graph_id)
-    if(way_valid){ 
+
+    int start_node_id = 0;
+    int end_node_id = 0;
+
+    if(way_valid){
       // Create new way struct
       Way* new_way = new Way;
       new_way->way_id = way_id;
       new_way->one_way = is_oneway;
-      //new_way->key_attribute = WayType::kRoad;
-      ways_.push_back(new_way);
 
-      // iterate through nodes in way
-      // interpolate node pairs and assign unique graph_id
-      // intersert to way's way and push into vector<Way*>
-      int start_node_id = 0;
-      int end_node_id = 0;
+      if(way_type == WayType::kRoad){ 
+        //new_way->key_attribute = WayType::kRoad;
+        ways_.push_back(new_way);
 
-      // nd points at first node of current road way
-      nd->Attribute("ref", &start_node_id);
+        // iterate through nodes in way
+        // interpolate node pairs and assign unique graph_id
+        // intersert to way's way and push into vector<Way*>
 
-      auto start_node = nodes_.find(start_node_id)->second;
-      auto end_node = nodes_.find(start_node_id)->second;
+        // nd points at first node of current road way
+        nd->Attribute("ref", &start_node_id);
 
-      // Check if start node already exists in navigation_nodes_ to avoid duplicates in graph
-      auto check = navigation_nodes_.find(start_node->graph_id);
-      if(check == navigation_nodes_.end()){
-        start_node->graph_id = current_graph_id_;
-        navigation_nodes_.insert({current_graph_id_, start_node});
-        ++current_graph_id_;
-      }
+        auto start_node = nodes_.find(start_node_id)->second;
+        auto end_node = nodes_.find(start_node_id)->second;
 
-      // Add start node to new way
-      new_way->nodes.push_back(start_node); 
-
-      while(nd->NextSiblingElement("nd")) {
-
-        // Interpolate nodes
-        nd->NextSiblingElement("nd")->Attribute("ref", &end_node_id); 
-        end_node = nodes_.find(end_node_id)->second;
-        std::vector<Node*> interpolated_nodes = ExtractNodes(start_node_id, end_node_id);
-
-        // Tag all nodes with new graph_id and insert into ways and nodes 
-        for(unsigned int i=0; i<interpolated_nodes.size(); i++){
-          navigation_nodes_.insert({current_graph_id_, interpolated_nodes[i]});
-          interpolated_nodes[i]->graph_id = current_graph_id_;
-          new_way->nodes.push_back(interpolated_nodes[i]); 
-          ++current_graph_id_;
-        }
-        // Check if end node already exists in navigation_nodes_ to avoid duplicates in graph
-        check = navigation_nodes_.find(end_node->graph_id);
+        // Check if start node already exists in navigation_nodes_ to avoid duplicates in graph
+        auto check = navigation_nodes_.find(start_node->graph_id);
         if(check == navigation_nodes_.end()){
-          end_node->graph_id = current_graph_id_;
-          navigation_nodes_.insert({current_graph_id_, end_node});  
+          start_node->graph_id = current_graph_id_;
+          navigation_nodes_.insert({current_graph_id_, start_node});
           ++current_graph_id_;
         }
 
-        // Insert end node to new way
-        new_way->nodes.push_back(end_node);
-        nd = nd->NextSiblingElement("nd");
-        start_node_id = end_node_id;   
+        // Add start node to new way
+        new_way->nodes.push_back(start_node); 
+
+        while(nd->NextSiblingElement("nd")) {
+
+          // Interpolate nodes
+          nd->NextSiblingElement("nd")->Attribute("ref", &end_node_id); 
+          end_node = nodes_.find(end_node_id)->second;
+          std::vector<Node*> interpolated_nodes = ExtractNodes(start_node_id, end_node_id);
+
+          // Tag all nodes with new graph_id and insert into ways and nodes 
+          for(unsigned int i=0; i<interpolated_nodes.size(); i++){
+            navigation_nodes_.insert({current_graph_id_, interpolated_nodes[i]});
+            interpolated_nodes[i]->graph_id = current_graph_id_;
+            new_way->nodes.push_back(interpolated_nodes[i]); 
+            ++current_graph_id_;
+          }
+          // Check if end node already exists in navigation_nodes_ to avoid duplicates in graph
+          check = navigation_nodes_.find(end_node->graph_id);
+          if(check == navigation_nodes_.end()){
+            end_node->graph_id = current_graph_id_;
+            navigation_nodes_.insert({current_graph_id_, end_node});  
+            ++current_graph_id_;
+          }
+
+          // Insert end node to new way
+          new_way->nodes.push_back(end_node);
+          nd = nd->NextSiblingElement("nd");
+          start_node_id = end_node_id;   
+        }
+      }
+      else{
+        nd->Attribute("ref", &start_node_id);
+        Node* start_node;
+
+
+        // Find nodes corresponding to node
+        while(nd->NextSiblingElement("nd")) {
+
+          start_node = nodes_.find(start_node_id)->second;
+
+          // Add node to new way
+          new_way->nodes.push_back(start_node); 
+          nd = nd->NextSiblingElement("nd");
+        }
+
+        // Insert way into corresponding list
+        if(way_type == WayType::kFootPath){
+          footpaths_.push_back(new_way);
+        }
+        else if(way_type == WayType::kConstruction){
+          construction_.push_back(new_way);
+        }
+
       }
     }
     return;
@@ -429,23 +470,23 @@ namespace gps_navigation{
     // Initialize states
 
     //if(t_prev_ == -1){
-    //  g_state_.pose.lat = lat;
-    //  g_state_.pose.lon = lon;
+    //  state_.pose.lat = lat;
+    //  state_.pose.lon = lon;
     //  t_prev = t;
 
     //  return st_graph;
     //}
     // If a new gps measurement is received
-    if((lat != g_state_.pose.lat) && use_gps_){
-      g_state_.pose.lat = lat;
-      g_state_.pose.lon = lon;
+    if((lat != state_.pose.lat) && use_gps_){
+      state_.pose.lat = lat;
+      state_.pose.lon = lon;
 
       // Node and position of planned node closest to ego vehicle
-      std::pair<double, double> x_y_ego = RelativeDisplacement(ref_origin_, &g_state_.pose);
+      std::pair<double, double> x_y_ego = RelativeDisplacement(ref_origin_, &state_.pose);
 
       // Condition to set position/orientation using gps
-      double dist_diff = sqrt((x_y_ego.first - g_state_.x_ego)*(x_y_ego.first - g_state_.x_ego) + 
-                              (x_y_ego.second - g_state_.y_ego)*(x_y_ego.second - g_state_.y_ego));
+      double dist_diff = sqrt((x_y_ego.first - state_.x_ego)*(x_y_ego.first - state_.x_ego) + 
+                              (x_y_ego.second - state_.y_ego)*(x_y_ego.second - state_.y_ego));
       
       // If the new GPS location is too far from pose estimated by odometry 
       if(dist_diff >= 2.0 || t_prev_ == -1){
@@ -465,18 +506,18 @@ namespace gps_navigation{
                                                                current_plan_[next_node_index_+1]);
         std::pair<double, double> dx_dy3 = RelativeDisplacement(ref_origin_, 
                                                                current_plan_[next_node_index_+2]);
-        g_state_.current_yaw = M_PI + atan2((dx_dy1.second - dx_dy2.second),
+        state_.current_yaw = M_PI + atan2((dx_dy1.second - dx_dy2.second),
                                (dx_dy1.first - dx_dy2.first));
-        g_state_.next_yaw = M_PI + atan2((dx_dy2.second - dx_dy3.second),
+        state_.next_yaw = M_PI + atan2((dx_dy2.second - dx_dy3.second),
                                (dx_dy2.first - dx_dy3.first));
         t_prev_ = t;
-        g_state_.x_ego = dx_dy1.first;
-        g_state_.y_ego = dx_dy1.second;
+        state_.x_ego = dx_dy1.first;
+        state_.y_ego = dx_dy1.second;
         x_next_ = dx_dy2.first;
         y_next_ = dx_dy2.second;
 
         //veh_pose = current_plan_[next_node_index_];
-        //current_state = std::make_tuple(true, next_node_index_, g_state_.x_ego, g_state_.y_ego, g_state_.current_yaw); 
+        //current_state = std::make_tuple(true, next_node_index_, state_.x_ego, state_.y_ego, state_.current_yaw); 
         //return current_state;
       }
 
@@ -487,11 +528,11 @@ namespace gps_navigation{
       double dd = 2*v*dt;
       t_prev_ = t;
       
-      //g_state_.yaw_ego += w_z * dt;
-      double dx = dd*cos(g_state_.current_yaw);
-      double dy = dd*sin(g_state_.current_yaw);
-      double predicted_x = g_state_.x_ego + dx;
-      double predicted_y = g_state_.y_ego + dy;
+      //state_.yaw_ego += w_z * dt;
+      double dx = dd*cos(state_.current_yaw);
+      double dy = dd*sin(state_.current_yaw);
+      double predicted_x = state_.x_ego + dx;
+      double predicted_y = state_.y_ego + dy;
       double dist_to_next = sqrt(pow(predicted_x - x_next_, 2) + pow(predicted_y - y_next_, 2));
       
       
@@ -504,14 +545,14 @@ namespace gps_navigation{
                                                                current_plan_[next_node_index_+1]);
         std::pair<double, double> dx_dy3 = RelativeDisplacement(ref_origin_, 
                                                                current_plan_[next_node_index_+2]);
-        g_state_.current_yaw = M_PI + atan2((dx_dy1.second - dx_dy2.second),
+        state_.current_yaw = M_PI + atan2((dx_dy1.second - dx_dy2.second),
                                (dx_dy1.first - dx_dy2.first));
-        g_state_.next_yaw = M_PI + atan2((dx_dy2.second - dx_dy3.second),
+        state_.next_yaw = M_PI + atan2((dx_dy2.second - dx_dy3.second),
                                (dx_dy2.first - dx_dy3.first));
 
         // Update starting pose
-        g_state_.x_ego = x_next_;
-        g_state_.y_ego = y_next_;
+        state_.x_ego = x_next_;
+        state_.y_ego = y_next_;
         // Update distance based on remaining distance
         dd -= dist_to_next;
         // Update orientation based on next waypoint
@@ -524,16 +565,16 @@ namespace gps_navigation{
        
       //veh_pose = current_plan_[next_node_index_];
 
-      g_state_.x_ego += dd*cos(g_state_.current_yaw);
-      g_state_.y_ego += dd*sin(g_state_.current_yaw);
-      //current_state = std::make_tuple(true, next_node_index_, g_state_.x_ego, g_state_.y_ego, g_state_.sim_yaw); 
+      state_.x_ego += dd*cos(state_.current_yaw);
+      state_.y_ego += dd*sin(state_.current_yaw);
+      //current_state = std::make_tuple(true, next_node_index_, state_.x_ego, state_.y_ego, state_.sim_yaw); 
        
       
     }
 
     // TODO: Extract graph
     veh_pose = current_plan_[next_node_index_];
-    GetMap()->FindRoadFeatures(veh_pose, 20);
+    GetMap()->FindRoadFeatures(veh_pose, 40);
 
   }
 
