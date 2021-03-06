@@ -53,6 +53,7 @@ namespace gps_navigation{
       std::vector<Way*> GetWays();
       //std::vector<Node*> GetNavigationNodes();
       void ResetPlan();
+      NNGraph nn_graph_;
       
     private:
       TiXmlDocument xml_map_;
@@ -65,7 +66,6 @@ namespace gps_navigation{
       std::unordered_map<int, Node*> nodes_;
       std::unordered_map<int, Node*> navigation_nodes_;
       OsmGraph osm_graph_;
-      NNGraph nn_graph_;
 
       std::vector<Node*> ExtractNodes(int start_node_id, int end_node_id);
   };

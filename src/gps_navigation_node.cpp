@@ -69,8 +69,27 @@ namespace gps_navigation{
     gps_point.x = dx_dy.first;
     gps_point.y = dx_dy.second;
     gps_point.z = 0;
-  
+    
+    visualization_msgs::Marker kd_nearest_viz;
+    kd_nearest_viz.header.frame_id = "/map";
+    kd_nearest_viz.header.stamp = ros::Time::now();
+    kd_nearest_viz.ns = "points_and_lines";
+    kd_nearest_viz.id = 0;
+    kd_nearest_viz.type = visualization_msgs::Marker::POINTS;
+    kd_nearest_viz.action = visualization_msgs::Marker::ADD;
+    kd_nearest_viz.color.b = 1.0;
+    kd_nearest_viz.color.a = 1.0;
+    kd_nearest_viz.scale.x = 9.2;
+    kd_nearest_viz.scale.y = 9.2;
+    Node* kd_nearest = gps_navigator->GetMap()->nn_graph_.KDNearest(gps_pose);
+    dx_dy = RelativeDisplacement(ref_start, kd_nearest);
+    
     gps_viz.points.push_back(gps_point);
+    gps_point.x = dx_dy.first;
+    gps_point.y = dx_dy.second;
+    kd_nearest_viz.points.push_back(gps_point);
+    kd_nearest_viz_pub.publish(kd_nearest_viz);
+    
     gps_viz_pub.publish(gps_viz);
   }
   
