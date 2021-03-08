@@ -9,6 +9,7 @@
  */
 
 #include <gps_navigation/gps_navigation_node.h>
+#include <chrono>
 
 namespace gps_navigation{
   GpsNavigationNode::GpsNavigationNode(){
@@ -81,7 +82,11 @@ namespace gps_navigation{
     kd_nearest_viz.color.a = 1.0;
     kd_nearest_viz.scale.x = 9.2;
     kd_nearest_viz.scale.y = 9.2;
+    //auto start = std::chrono::high_resolution_clock::now();
     Node* kd_nearest = gps_navigator->GetMap()->nn_graph_.KDNearest(gps_pose);
+    //auto end = std::chrono::high_resolution_clock::now();
+    //auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+    //std::cout << "Time taken in microseconds: " << duration.count() << std::endl;
     dx_dy = RelativeDisplacement(ref_start, kd_nearest);
     
     gps_viz.points.push_back(gps_point);

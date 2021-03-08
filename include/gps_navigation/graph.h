@@ -63,6 +63,10 @@ namespace gps_navigation{
 
 
   };
+  // Node structure for the KD Tree. 
+  // Split value is just the value it has as the median for this layer
+  // lat ind and lon ind are the position it would have been in an array 
+  // sorted by lat primary and lon secondary or vice versa.
   class KDNode {
     public:
       KDNode(Node * osm_node) {
@@ -77,21 +81,30 @@ namespace gps_navigation{
       unsigned int lat_ind; // Latitude tuple
       unsigned int lon_ind; // Longitude tuple
   };
+  // Comparator functions (compares the ind variables or just direct latitude and longitude variables)
   bool lesserKDNodeLat(KDNode* n1, KDNode* n2);
   bool lesserKDNodeLon(KDNode* n1, KDNode* n2);
   bool ltLatInd(KDNode* n1, KDNode* n2);
   bool ltLonInd(KDNode* n1, KDNode* n2);
+  // Obtains the median of unsorted and returns it.
   KDNode* linearMedian(std::vector<KDNode*> unsorted, bool lat_level);
+  // KD Tree structure
+  // root is the root of the tree, best/best dist is for NN search
   class NNGraph {
     public:
       NNGraph();
       KDNode* root = NULL;
       KDNode* best = NULL;
       double best_dist = INFINITY;
+      // Creates a tree
       void Generate(std::unordered_map<int, Node*> node_table);
+      // Unused for now, unimplemented as maps won't change during a run
       void Insert(Node* osm_node);
-      KDNode* Partition(std::vector<KDNode*> children, bool lat_level); // Recursive partition function
+      // Recursive function used by Generate to help create the tree
+      KDNode* Partition(std::vector<KDNode*> children, bool lat_level);
+      // Recursive function called by KDNearest to help get the nearest neighbor
       void NearestNeighbor(KDNode* root, KDNode* ego_location, bool lat_level);
+      // Outward facing function for nearest neighbor (likely the node will directly call this and generate)
       Node* KDNearest (Node* ego_location);
   };
 }

@@ -185,37 +185,42 @@ namespace gps_navigation{
   // Linear median of medians algorithm
   KDNode* linearMedian(std::vector<KDNode*> unsorted, bool lat_level) {
     //std::cout << unsorted.size() << std::endl;
-    if(unsorted.size() == 1) {
+    if(unsorted.size() == 1) { // Base case, we are at the end of this recursion
       return unsorted[0];
+    }
+    if(!lat_level) { // Longitude case, we can just return the middle of the array since the input array is guaranteed to be sorted by longitude
+      return unsorted[unsorted.size()>>1];
     }
     std::vector<KDNode*> intermediate;
     
     // Split it into length segments of 5, find their medians manually, recurse 
     for(unsigned int i = 0; i < unsorted.size()/5; i++) { // Could leave a segment at the end of length < 5
-      if(lat_level) {
+      //if(lat_level) {
         std::sort(unsorted.begin()+(5*i), unsorted.begin()+(5*i+5), ltLatInd);
         intermediate.push_back(unsorted[5*i+2]);
-      } else {
+      /*} else {
         std::sort(unsorted.begin()+(5*i), unsorted.begin()+(5*i+5), ltLonInd);  
         intermediate.push_back(unsorted[5*i+2]);
-      }
+      }*/
     }
     // Deal with the remaining segment of < 5 here and return that median as well to intermediate
     if(5*intermediate.size() < unsorted.size()) {
       unsigned int lastseglength = unsorted.size() - (5*intermediate.size());
-      if(lat_level) {
+      //if(lat_level) {
         std::sort(unsorted.begin()+intermediate.size(), unsorted.end(), ltLatInd);
-      } else {
+      /*} else {
         std::sort(unsorted.begin()+intermediate.size(), unsorted.end(), ltLonInd);
-      }
-      intermediate.push_back(unsorted[5*intermediate.size()+lastseglength/2]);
+      }*/
+      intermediate.push_back(unsorted[5*intermediate.size()+lastseglength>>1]);
     }
     KDNode* result = linearMedian(intermediate, lat_level);
     //std::cout << result->lat_ind << std::endl;
     return result;
   }
+  // Contstructor, doesn't actually do much besides instantiate
   NNGraph::NNGraph(){
   }
+  // Unused, not necessary for now
   void NNGraph::Insert(Node* osm_node) {
     // Make top level lat, second level lon
   }
@@ -251,6 +256,7 @@ namespace gps_navigation{
         }
       }
     }
+    // Recurse given our median node
     median->left = Partition(lt, !lat_level);
     median->right = Partition(gt, !lat_level);
     median->split = lat_level ? median->osm_node->lat : median->osm_node->lon;
@@ -330,6 +336,7 @@ namespace gps_navigation{
       this->best = root;
     }
   }
+  // ROS Node facing function: Calls given the query gps pose
   Node* NNGraph::KDNearest(Node* ego_location) {
     this->best_dist = INFINITY;
     this->best = NULL;
