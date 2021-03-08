@@ -29,15 +29,13 @@ namespace gps_navigation{
   
     // Parse map
     ParseMap();    
-    std::cout << " Parsed map" << std::endl;
     // Define OSM graph
     osm_graph_ = OsmGraph();
     osm_graph_.Generate(ways_, navigation_nodes_);
     osm_graph_.ConnectWays(footpaths_, navigation_nodes_);
-    std::cout << "Num of footpaths in total: " << footpaths_.size() << "\n";
 
-    //osm_graph_.ConnectWays(footpaths_, navigation_nodes_)
     //osm_graph_.ConnectImplicitWays(construction_, navigation_nodes_)
+    std::cout << " Parsed map" << std::endl;
     
   }
 
@@ -164,7 +162,7 @@ namespace gps_navigation{
           way_type = WayType::kRoad;
         }
       }
-      if( k == "highway" && v == "footway" ){
+      if( k == "crossing" && v == "marked" ){
         // Pedestrian walkways
         way_valid = true;
         way_type = WayType::kFootPath;

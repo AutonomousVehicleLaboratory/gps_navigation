@@ -99,14 +99,12 @@ namespace gps_navigation{
 
   void OsmGraph::ConnectWays(std::vector<Way*> elements, std::unordered_map<int, Node*> node_table){
     for(auto way: elements){
-      //TODO
       for(auto node: way->nodes){
         // graph_id are generated for interpolated nodes but also assigned to
         // original osm nodes 
         
         auto check = node_table.find(node->graph_id);  
         if(check != node_table.end()){
-          std::cout << "found a footpath connection " << std::endl;
           check->second->associated_ways.push_back(way);
         }
       }
@@ -275,6 +273,14 @@ namespace gps_navigation{
         // Find neighbors of type Node
         if(curr_node->edges){
           for(auto neighbor: curr_node->edges->nodes){
+            if(neighbor->explored) continue;
+
+            curr_q.push(neighbor);          
+          } 
+        }
+
+        if(curr_node->implicit_edges){
+          for(auto neighbor: curr_node->implicit_edges->nodes){
             if(neighbor->explored) continue;
 
             curr_q.push(neighbor);          
