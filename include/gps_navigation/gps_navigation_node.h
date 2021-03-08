@@ -40,13 +40,16 @@ namespace gps_navigation{
       
       visualization_msgs::MarkerArray VisMarkersFromNodes(std::vector<Node*> nodes, int marker_type, float color_r, float color_g, float color_b);
 
+      
       nav_msgs::Path VisualizePath(std::vector<Node*> path);
+      void VisualizeFootPaths(std::vector<Way*> ways);
       nav_msgs::Path VisualizeNetwork();
       
       // Publishers   
       ros::NodeHandle n;
       ros::Publisher shortest_path_viz;
       ros::Publisher road_network_viz;
+      ros::Publisher footpaths_viz;
       ros::Publisher node_orientation_viz;
       ros::Publisher gps_viz_pub;
       ros::Publisher gps_closest_viz_pub;

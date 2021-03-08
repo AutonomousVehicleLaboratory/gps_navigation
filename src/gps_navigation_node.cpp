@@ -14,6 +14,7 @@ namespace gps_navigation{
   GpsNavigationNode::GpsNavigationNode(){
     shortest_path_viz = n.advertise<nav_msgs::Path>("/shortest_path", 1000);
     road_network_viz = n.advertise<nav_msgs::Path>("/road_network", 1000);
+    footpaths_viz = n.advertise<nav_msgs::Path>("/foot_paths", 1000);
     node_orientation_viz = n.advertise<visualization_msgs::Marker>("/node_orientations", 1000);
     gps_viz_pub = n.advertise<visualization_msgs::Marker>("/gps_pose", 1000);
     gps_closest_viz_pub = n.advertise<visualization_msgs::Marker>("/gps_oriented_pose", 1000);
@@ -142,16 +143,19 @@ namespace gps_navigation{
       std::vector<Node*> stops = gps_navigator->GetMap()->GetStops(); 
       std::vector<Node*> crossings = gps_navigator->GetMap()->GetCrossings(); 
       std::vector<Node*> signals = gps_navigator->GetMap()->GetTrafficSignals(); 
-      //std::vector<Node*> crossings = gps_navigator->GetMap()->GetStops(); 
-      //std::vector<Node*> traffic_signals = gps_navigator->GetMap()->GetStops(); 
+      std::vector<Way*> footpaths = gps_navigator->GetMap()->GetFootPaths(); 
+      //std::vector<Way*> footpaths = gps_navigator->GetMap()->footpaths_; 
 
-      //
+      // Visualize stops, crossings and signals
       visualization_msgs::MarkerArray stop_markers = VisMarkersFromNodes(stops, 0, 1.0, 1.0, 0.0); 
       visualization_msgs::MarkerArray crossing_markers= VisMarkersFromNodes(crossings, 0, 0.0, 1.0, 1.0); 
       visualization_msgs::MarkerArray signal_markers= VisMarkersFromNodes(signals, 0, 1.0, 0.5, 0.0); 
       g_stops_pub.publish(stop_markers);
       g_crossings_pub.publish(crossing_markers);
       g_signals_pub.publish(signal_markers);
+
+      // Visualize footpaths
+      VisualizeFootPaths(footpaths);
 
       // For OSM bev
       // TODO:
@@ -227,32 +231,7 @@ namespace gps_navigation{
     }
     return marker;
   }
-  nav_msgs::Path GpsNavigationNode::VisualizePath(std::vector<Node*> path){
-    nav_msgs::Path road_network;
-    road_network.header.frame_id = "map";
-    geometry_msgs::PoseStamped current_pose;
-    
-    Node ref_start;
-    ref_start.lat = kOsmOriginX;
-    ref_start.lon = kOsmOriginY;
-    
-    road_network.poses.clear();
-    ros::Time current_time = ros::Time::now(); 
-    for (unsigned int i=0; i<path.size(); i++){
-      std::pair<double, double> dx_dy = RelativeDisplacement(&ref_start, path[i]);
-      current_pose.pose.position.x = dx_dy.first;
-      current_pose.pose.position.y = dx_dy.second;
-      current_pose.pose.position.z = 0.0;
-      current_pose.header.seq = i;
-      current_pose.header.frame_id = "map";
-      current_pose.header.stamp = current_time;
-      road_network.poses.push_back(current_pose);
-       
-    }
-    //road_network.header.stamp = current_time;
-    return road_network; 
-  }
-  
+
   visualization_msgs::MarkerArray GpsNavigationNode::VisMarkersFromNodes(std::vector<Node*> nodes, int marker_type, float color_r, float color_g, float color_b){
     visualization_msgs::MarkerArray markers;
     visualization_msgs::Marker marker;
@@ -308,6 +287,73 @@ namespace gps_navigation{
     }
     return markers;
   }
+  nav_msgs::Path GpsNavigationNode::VisualizePath(std::vector<Node*> path){
+    nav_msgs::Path road_network;
+    road_network.header.frame_id = "map";
+    geometry_msgs::PoseStamped current_pose;
+    
+    Node ref_start;
+    ref_start.lat = kOsmOriginX;
+    ref_start.lon = kOsmOriginY;
+    
+    road_network.poses.clear();
+    ros::Time current_time = ros::Time::now(); 
+    for (unsigned int i=0; i<path.size(); i++){
+      std::pair<double, double> dx_dy = RelativeDisplacement(&ref_start, path[i]);
+      current_pose.pose.position.x = dx_dy.first;
+      current_pose.pose.position.y = dx_dy.second;
+      current_pose.pose.position.z = 0.0;
+      current_pose.header.seq = i;
+      current_pose.header.frame_id = "map";
+      current_pose.header.stamp = current_time;
+      road_network.poses.push_back(current_pose);
+       
+    }
+    //road_network.header.stamp = current_time;
+    return road_network; 
+  }
+
+  void GpsNavigationNode::VisualizeFootPaths(std::vector<Way*> ways){
+    nav_msgs::Path paths;
+    visualization_msgs::Marker current_direction;
+    current_direction.action = visualization_msgs::Marker::ADD;
+    
+
+    paths.header.frame_id = "map";
+    geometry_msgs::PoseStamped current_pose;
+    
+    Node* ref_start = new Node;
+    ref_start->lat = kOsmOriginX;
+    ref_start->lon = kOsmOriginY;
+    
+    int counter = 0;
+    ros::Time current_time = ros::Time::now();
+    for (unsigned int i=0; i<ways.size(); i++){ 
+      paths.poses.clear();
+      current_time = ros::Time::now();
+      for (unsigned int j=0; j<ways[i]->nodes.size(); j++){
+        std::pair<double, double> dx_dy = RelativeDisplacement(ref_start, ways[i]->nodes[j]);
+        // Accumulate orientation markers
+        // Estimate quaternion representation
+        //node_directions.markers.push_back(current_direction);
+        
+        // Create road network segment
+        current_pose.pose.position.x = dx_dy.first;
+        current_pose.pose.position.y = dx_dy.second;
+        current_pose.pose.position.z = 0.0;
+        current_pose.header.seq = counter;
+        current_pose.header.frame_id = "map";
+        current_pose.header.stamp = current_time;
+        paths.poses.push_back(current_pose);
+
+        ++counter; 
+      }
+      footpaths_viz.publish(paths);
+    }
+    //road_network.header.stamp = current_time;
+  
+  }
+  
   nav_msgs::Path GpsNavigationNode::VisualizeNetwork(){
     nav_msgs::Path road_network;
     //visualization_msgs::MarkerArray node_directions;

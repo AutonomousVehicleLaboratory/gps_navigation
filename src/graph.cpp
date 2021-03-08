@@ -96,6 +96,39 @@ namespace gps_navigation{
       }
     }  
   }
+
+  void OsmGraph::ConnectWays(std::vector<Way*> elements, std::unordered_map<int, Node*> node_table){
+    for(auto way: elements){
+      //TODO
+      for(auto node: way->nodes){
+        // graph_id are generated for interpolated nodes but also assigned to
+        // original osm nodes 
+        
+        auto check = node_table.find(node->graph_id);  
+        if(check != node_table.end()){
+          std::cout << "found a footpath connection " << std::endl;
+          check->second->associated_ways.push_back(way);
+        }
+      }
+    }
+
+    return;  
+  }
+  void ConnectImplicitWays(std::vector<Way*> elements, std::unordered_map<int, Node*> node_table){
+
+    for(auto way: elements){
+      //TODO
+      for(auto node: way->nodes){
+        // graph_id are generated for interpolated nodes but also assigned to
+        // original osm nodes 
+        //TODO: find node within node_table that is closest to node
+        //check->second->associated_ways.push_back(way);
+      }
+    }
+
+    return;  
+
+  }
   void OsmGraph::ResetGraph(std::unordered_map<int, Node*> node_table){
     auto node_start = node_table.begin();  
     auto node_end = node_table.end();
@@ -190,12 +223,11 @@ namespace gps_navigation{
       for(auto node: explored_){
         node->explored = false;
       }
-      stopsigns_ = {};
-      crossings_ = {};
-      traffic_signals_ = {};
-      foot_paths_ = {};
-      roads_ = {};
-      construction_ = {};
+      nearby_stopsigns_ = {};
+      nearby_crossings_ = {};
+      nearby_traffic_signals_ = {};
+      nearby_footpaths_ = {};
+      nearby_construction_ = {};
     }
 
     search_q.push(point);
@@ -214,23 +246,31 @@ namespace gps_navigation{
         explored_.push_back(curr_node);
 
         // separate node types by:
-        // stopsigns_
+        // nearby_stopsigns_
         if(curr_node->key_attribute == NodeType::kStopSign){
-          stopsigns_.push_back(curr_node);
+          nearby_stopsigns_.push_back(curr_node);
         }
-        // crossings_ 
+        // nearby_crossings_ 
         if(curr_node->key_attribute == NodeType::kCrossing){
-          crossings_.push_back(curr_node);
+          nearby_crossings_.push_back(curr_node);
         }
         
-        // traffic_signals_
+        // nearby_traffic_signals_
         if(curr_node->key_attribute == NodeType::kTrafficSignal){
-          traffic_signals_.push_back(curr_node);
+          nearby_traffic_signals_.push_back(curr_node);
         }
 
-        // foot_paths_
-        // roads_
-        // construction_
+        //if(curr_node->associated_ways.size() > 0) std::cout  << "FOUND WAY\n";
+
+        // nearby_footpaths_
+        for(auto curr_way: curr_node->associated_ways){
+          // nearby_footpaths_
+          if(curr_way->key_attribute == WayType::kFootPath){
+            nearby_footpaths_.push_back(curr_way);
+          }
+
+          // TODO: search for nearby_construction_
+        }
 
         // Find neighbors of type Node
         if(curr_node->edges){
@@ -244,24 +284,24 @@ namespace gps_navigation{
       search_q = curr_q;
       curr_k += 1;
     }
-    //unsigned int total_features = stopsigns_.size() + crossings_.size() + traffic_signals_.size();
-    std::cout << "Number of stop signs: " << stopsigns_.size() << "\n";
-    std::cout << "Number of crossings: " << crossings_.size() << "\n";
-    std::cout << "Number of traffic signals: " << traffic_signals_.size() << "\n";
     
     return;
 
 
   }
   std::vector<Node*> OsmGraph::RetrieveStops(){
-    return stopsigns_;
+    return nearby_stopsigns_;
   }
 
   std::vector<Node*> OsmGraph::RetrieveCrossings(){
-    return crossings_;
+    return nearby_crossings_;
   }
 
   std::vector<Node*> OsmGraph::RetrieveTrafficSignals(){
-    return traffic_signals_;
+    return nearby_traffic_signals_;
   }
+
+  std::vector<Way*> OsmGraph::RetrieveFootPaths(){
+    return nearby_footpaths_;
+  } 
 }

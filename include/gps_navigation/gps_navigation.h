@@ -81,6 +81,8 @@ namespace gps_navigation{
       // Wrapper for returning OsmGraph traffic signals  
       std::vector<Node*> GetTrafficSignals();
 
+      // Wrapper for returning OsmGraph footpaths 
+      std::vector<Way*> GetFootPaths();
       
 
       /* Return ways */

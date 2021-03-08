@@ -33,6 +33,11 @@ namespace gps_navigation{
     // Define OSM graph
     osm_graph_ = OsmGraph();
     osm_graph_.Generate(ways_, navigation_nodes_);
+    osm_graph_.ConnectWays(footpaths_, navigation_nodes_);
+    std::cout << "Num of footpaths in total: " << footpaths_.size() << "\n";
+
+    //osm_graph_.ConnectWays(footpaths_, navigation_nodes_)
+    //osm_graph_.ConnectImplicitWays(construction_, navigation_nodes_)
     
   }
 
@@ -158,11 +163,11 @@ namespace gps_navigation{
           way_valid = true;
           way_type = WayType::kRoad;
         }
-        else if( v == "footway"){
-          // Pedestrian walkways
-          way_valid = true;
-          way_type = WayType::kFootPath;
-        }
+      }
+      if( k == "highway" && v == "footway" ){
+        // Pedestrian walkways
+        way_valid = true;
+        way_type = WayType::kFootPath;
       }
       
       // Construction areas
@@ -189,6 +194,7 @@ namespace gps_navigation{
 
       if(way_type == WayType::kRoad){ 
         //new_way->key_attribute = WayType::kRoad;
+        new_way->key_attribute = way_type;
         ways_.push_back(new_way);
 
         // iterate through nodes in way
@@ -241,18 +247,21 @@ namespace gps_navigation{
         }
       }
       else{
-        nd->Attribute("ref", &start_node_id);
         Node* start_node;
 
+        new_way->key_attribute = way_type;
 
         // Find nodes corresponding to node
         while(nd->NextSiblingElement("nd")) {
 
+          nd->Attribute("ref", &start_node_id);
           start_node = nodes_.find(start_node_id)->second;
 
           // Add node to new way
           new_way->nodes.push_back(start_node); 
+          //nd = nd->NextSiblingElement("nd");
           nd = nd->NextSiblingElement("nd");
+          //nd->NextSiblingElement("nd")->Attribute("ref", &start_node_id); 
         }
 
         // Insert way into corresponding list
@@ -277,7 +286,6 @@ namespace gps_navigation{
     //
 
     // Extract all of the node information 
-    // TODO: track nodes of type crossings, stopsigns and traffic signs
     
     TiXmlElement *node_element = node_handle.Element(); 
 
@@ -365,6 +373,10 @@ namespace gps_navigation{
 
   std::vector<Node*> Map::GetTrafficSignals(){
     return osm_graph_.RetrieveTrafficSignals();
+  }
+
+  std::vector<Way*> Map::GetFootPaths(){
+    return osm_graph_.RetrieveFootPaths();
   }
 
   std::vector<Way*> Map::GetWays(){

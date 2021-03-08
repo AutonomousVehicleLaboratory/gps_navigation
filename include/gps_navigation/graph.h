@@ -84,17 +84,23 @@ namespace gps_navigation{
     public:
       OsmGraph();
       // Elements within a radius k
-      std::vector<Node*> stopsigns_;
-      std::vector<Node*> crossings_;
-      std::vector<Node*> traffic_signals_; 
-      std::vector<Node*> foot_paths_;
-      std::vector<Node*> roads_;
-      std::vector<Node*> construction_;
+      std::vector<Node*> nearby_stopsigns_;
+      std::vector<Node*> nearby_crossings_;
+      std::vector<Node*> nearby_traffic_signals_; 
+      std::vector<Way*> nearby_footpaths_;
+      std::vector<Node*> nearby_construction_;
 
       std::vector<Node*> explored_;
 
       // Generates connections for main roads
       void Generate(std::vector<Way*> ways, std::unordered_map<int, Node*> node_table);
+  
+      // Generates connections between ways and existing node (road) elements (nearest connection assumed)
+      void ConnectWays(std::vector<Way*> elements, std::unordered_map<int, Node*> node_table);
+
+      // Generates connections between ways and existing node (road) elements (by closest distance) 
+      void ConnectImplicitWays(std::vector<Way*> elements, std::unordered_map<int, Node*> node_table);
+  
 
       void ResetGraph(std::unordered_map<int, Node*> node_table);
       std::stack<Node*> Dijkstra(Node* point1, Node* point2);
@@ -106,6 +112,7 @@ namespace gps_navigation{
       std::vector<Node*> RetrieveStops();
       std::vector<Node*> RetrieveCrossings();
       std::vector<Node*> RetrieveTrafficSignals();
+      std::vector<Way*> RetrieveFootPaths();
 
   };
 }
