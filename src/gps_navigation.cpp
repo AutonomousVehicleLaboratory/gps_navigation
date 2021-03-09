@@ -761,7 +761,14 @@ namespace gps_navigation{
      
     return current_state; 
   } 
+
+  std::vector<Node*> Navigation::GetTraversedNodes(){
+    return std::vector<Node*>(current_plan_.begin(), current_plan_.begin() + next_node_index_);
+  }
   
+  std::vector<Node*> Navigation::GetPlannedNodes(){
+    return std::vector<Node*>(current_plan_.begin() + next_node_index_+1, current_plan_.end());
+  }
    
   
 }

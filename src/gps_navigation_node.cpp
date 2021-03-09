@@ -14,6 +14,8 @@ namespace gps_navigation{
   GpsNavigationNode::GpsNavigationNode(){
     shortest_path_viz = n.advertise<nav_msgs::Path>("/shortest_path", 1000);
     road_network_viz = n.advertise<nav_msgs::Path>("/road_network", 1000);
+    traversed_path_viz = n.advertise<nav_msgs::Path>("/traversed_path", 1000);
+    planned_path_viz = n.advertise<nav_msgs::Path>("/planned_path", 1000);
     footpaths_viz = n.advertise<nav_msgs::Path>("/foot_paths", 1000);
     node_orientation_viz = n.advertise<visualization_msgs::Marker>("/node_orientations", 1000);
     gps_viz_pub = n.advertise<visualization_msgs::Marker>("/gps_pose", 1000);
@@ -144,6 +146,8 @@ namespace gps_navigation{
       std::vector<Node*> crossings = gps_navigator->GetMap()->GetCrossings(); 
       std::vector<Node*> signals = gps_navigator->GetMap()->GetTrafficSignals(); 
       std::vector<Way*> footpaths = gps_navigator->GetMap()->GetFootPaths(); 
+      std::vector<Node*> traversed_path = gps_navigator->GetTraversedNodes();
+      std::vector<Node*> planned_path = gps_navigator->GetPlannedNodes();
       //std::vector<Way*> footpaths = gps_navigator->GetMap()->footpaths_; 
 
       // Visualize stops, crossings and signals
@@ -156,6 +160,14 @@ namespace gps_navigation{
 
       // Visualize footpaths
       VisualizeFootPaths(footpaths);
+
+      // Visualize traversed path
+      nav_msgs::Path trav_path_msg = VisualizePath(traversed_path);
+      traversed_path_viz.publish(trav_path_msg);
+
+      // Visualize planned path
+      nav_msgs::Path plan_path_msg = VisualizePath(planned_path);
+      planned_path_viz.publish(plan_path_msg);
 
       // For OSM bev
       // TODO:

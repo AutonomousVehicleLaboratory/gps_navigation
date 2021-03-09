@@ -49,6 +49,8 @@ namespace gps_navigation{
       ros::NodeHandle n;
       ros::Publisher shortest_path_viz;
       ros::Publisher road_network_viz;
+      ros::Publisher traversed_path_viz;
+      ros::Publisher planned_path_viz;
       ros::Publisher footpaths_viz;
       ros::Publisher node_orientation_viz;
       ros::Publisher gps_viz_pub;
