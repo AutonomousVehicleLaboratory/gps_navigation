@@ -1,5 +1,5 @@
 <launch>
-    <node pkg="gps_navigation" type="gps_navigation_node" name="gps_navigation" launch-prefix="gdb --args" output="screen">
+    <node pkg="gps_navigation" type="gps_navigation_node" name="gps_navigation" output="screen">
 <!--     	<param name="osm_path" value= "/mnt/avl_shared/user-files/dpaz/DPGN/ucsd.osm"/>
  -->
  		<param name="osm_path" value= "/home/users/hao/ucsd-03-12-2021.osm"/>
