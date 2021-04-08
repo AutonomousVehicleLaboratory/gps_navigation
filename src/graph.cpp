@@ -179,7 +179,7 @@ namespace gps_navigation{
         //     }
 
         //   }
-        cnode_table.push_back(std::make_pair(0, constructionNode));
+        cnode_table.insert(std::make_pair(0, constructionNode));
       }
     }
     // Generates a NNGraph for the construction nodes only
@@ -188,7 +188,7 @@ namespace gps_navigation{
     CNodeGraph.Generate(cnode_table);
     for (auto nodePair: node_table) {
         auto theNode = nodePair.second;
-        CNodeGraph.withinRadius(theNode, radius);
+        CNodeGraph.WithinRadius(theNode, radius);
     }
 
   }
@@ -587,8 +587,57 @@ namespace gps_navigation{
       this->best = root;
     }
   }
+  // Recursive, returns nearest neighbor in the tree (start with lat_level = true)
+  // O(2^d + log(n)) where d is depth of tree
+  void NNGraph::RadiusSearch(KDNode* root, KDNode* ego_location, double radius, bool lat_level) {
+    // Base case, no such node on this part of the tree exists
+    if(!root) {
+      return;
+    }
+    // Base case, reached leaf
+    if(!root->left && !root->right) {
+      //std::cout << " Reached leaf" << std::endl;
+      double dist = GreatCircleDistance(root->osm_node, ego_location->osm_node);
+      if(dist < radius) {
+        ego_location->osm_node->associated_construction_Nodes.push_back(root->osm_node);
+      }
+      return; 
+    }
+    //std::cout << " Reached the Nearest Neighbor Algorithm" << std::endl;
+    if(lat_level) { // Latitude split
+      if(lesserKDNodeLat(ego_location, root)) { // Left
+        RadiusSearch(root->left, ego_location, radius, !lat_level);
+        if(ego_location->osm_node->lat + radius >= root->split) { // Right tree contains points within threshold
+          RadiusSearch(root->right, ego_location, radius, !lat_level);
+        }
+      } else { // Right
+        RadiusSearch(root->right, ego_location, radius, !lat_level);
+        if(ego_location->osm_node->lat - radius <= root->split) { // Left tree contains points within threshold
+          RadiusSearch(root->left, ego_location, radius, !lat_level);
+        }    
+      }
+    } else { // Longitude split
+      if(lesserKDNodeLon(ego_location, root)) { // Left
+        RadiusSearch(root->left, ego_location, radius, !lat_level);
+        if(ego_location->osm_node->lon + radius >= root->split) { // Right tree contains points within threshold
+          RadiusSearch(root->right, ego_location, radius, !lat_level);
+        }
+      } else { // Right
+        RadiusSearch(root->right, ego_location, radius, !lat_level);
+        if(ego_location->osm_node->lon - radius <= root->split) { // Left tree contains points within threshold
+          RadiusSearch(root->left, ego_location, radius, !lat_level);
+        }    
+      }
+    }
+    double dist = GreatCircleDistance(root->osm_node, ego_location->osm_node);
+    if(dist < radius) { // Parent node is within threshold case
+      ego_location->osm_node->associated_construction_Nodes.push_back(root->osm_node);
+    }
+  }
   // Radius search for a given KD tree
-  void WithinRadius(Node* query, double radius) {
+  void NNGraph::WithinRadius(Node* query, double radius) {
+    // Populate the query associated_construction_nodes with nodes within the specified radius
+    this->RadiusSearch(this->root, new KDNode(query), radius, true);
 
   }
   // ROS Node facing function: Calls given the query gps pose
