@@ -39,12 +39,14 @@ namespace gps_navigation{
     clicked_point = n.subscribe("/move_base_simple/goal", 1000, &GpsNavigationNode::ClickedPointCallback, this);
     
     // Initialize map
-    //std::string osm_path = "/mnt/avl_shared/user-files/dpaz/DPGN/ucsd.osm";
-    std::string osm_path;
+    std::string osm_path = "/mnt/avl_shared/avl_shared/user-files/dpaz/DPGN/ucsd.osm";
+    //std::string osm_path;
     double radius;
-    if(n.getParam("/gps_navigation/osm_path", osm_path)){
-      std::cout<<"The open street map file's path is set to be: "<<osm_path<<"\n";
-    }
+
+    // Commented this out for now, verified all existing functionality works with the new changes
+    //if(n.getParam("/gps_navigation/osm_path", osm_path)){
+      //std::cout<<"The open street map file's path is set to be: "<<osm_path<<"\n";
+    //}
     if(n.getParam("/gps_navigation/radius", radius)){
       std::cout<<"The search radius for construction is set to be: "<<radius<<"\n";
     }

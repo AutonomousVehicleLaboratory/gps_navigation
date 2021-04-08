@@ -166,19 +166,29 @@ namespace gps_navigation{
     // for every navigation nodes, find the set of construction nodes associated with it
     double dist;
     std::cout<<"Total construction Nodes: "<<constructions.size()<<"\n";
+    std::unordered_map<int, Node*> cnode_table;
     for(auto constructionWay: constructions){
       for(auto constructionNode: constructionWay->nodes){
+        
+        //   for(auto nodePair: node_table){
+        //     auto theNode = nodePair.second;
+        //     dist = GreatCircleDistance(theNode, constructionNode);
+        //     if(dist<radius){
+        //       theNode->associated_construction_Nodes.push_back(constructionNode);
+        //       //std::cout<<"Distance: "<<dist<<std::endl;
+        //     }
 
-          for(auto nodePair: node_table){
-            auto theNode = nodePair.second;
-            dist = GreatCircleDistance(theNode, constructionNode);
-            if(dist<radius){
-              theNode->associated_construction_Nodes.push_back(constructionNode);
-              //std::cout<<"Distance: "<<dist<<std::endl;
-            }
-
-          }
+        //   }
+        cnode_table.push_back(std::make_pair(0, constructionNode));
       }
+    }
+    // Generates a NNGraph for the construction nodes only
+    // Also will iterate through node table and populate all the construction associated nodes
+    auto CNodeGraph = NNGraph();
+    CNodeGraph.Generate(cnode_table);
+    for (auto nodePair: node_table) {
+        auto theNode = nodePair.second;
+        CNodeGraph.withinRadius(theNode, radius);
     }
 
   }
@@ -576,6 +586,10 @@ namespace gps_navigation{
       this->best_dist = dist;
       this->best = root;
     }
+  }
+  // Radius search for a given KD tree
+  void WithinRadius(Node* query, double radius) {
+
   }
   // ROS Node facing function: Calls given the query gps pose
   Node* NNGraph::KDNearest(Node* ego_location) {

@@ -188,6 +188,8 @@ namespace gps_navigation{
       KDNode* Partition(std::vector<KDNode*> children, bool lat_level);
       // Recursive function called by KDNearest to help get the nearest neighbor
       void NearestNeighbor(KDNode* root, KDNode* ego_location, bool lat_level);
+      // Radius search function used for association of construction nodes with normal nodes
+      void WithinRadius(Node* query, double radius);
       // Outward facing function for nearest neighbor (likely the node will directly call this and generate)
       Node* KDNearest (Node* ego_location);
   };
