@@ -309,26 +309,30 @@ namespace gps_navigation{
     } 
   }
   Node* Map::FindClosestNode(double lat, double lon){
+    // Node point;
+    // point.lat = lat;
+    // point.lon = lon;
+    // auto nodes_start = navigation_nodes_.begin();
+    // auto nodes_end = navigation_nodes_.end();
+
+    // Node* shortest_node = NULL;
+    // double shortest_distance = INFINITY;
+    // double curr_distance = INFINITY;
+    // while(nodes_start != nodes_end){
+    //   curr_distance = GreatCircleDistance(&point, nodes_start->second);
+    //   if(curr_distance < shortest_distance ){
+    //     shortest_distance = curr_distance;
+    //     shortest_node = nodes_start->second; 
+    //   }
+    //   ++nodes_start;
+    // }
+    // //std::cout << "Node (" << shortest_node->graph_id << ")distance: " << shortest_distance << std::endl;
+    
     Node point;
     point.lat = lat;
     point.lon = lon;
-    auto nodes_start = navigation_nodes_.begin();
-    auto nodes_end = navigation_nodes_.end();
-
-    Node* shortest_node = NULL;
-    double shortest_distance = INFINITY;
-    double curr_distance = INFINITY;
-    while(nodes_start != nodes_end){
-      curr_distance = GreatCircleDistance(&point, nodes_start->second);
-      if(curr_distance < shortest_distance ){
-        shortest_distance = curr_distance;
-        shortest_node = nodes_start->second; 
-      }
-      ++nodes_start;
-    }
-    //std::cout << "Node (" << shortest_node->graph_id << ")distance: " << shortest_distance << std::endl;
     
-    return shortest_node;
+    return this->nn_graph_.KDNearest(&point);
   }
   Node* Map::FindClosestNodeRelative(double x, double y, double origin_lat, double origin_lon){
     Node point;
