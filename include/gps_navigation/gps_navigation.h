@@ -84,8 +84,10 @@ namespace gps_navigation{
       // Wrapper for returning OsmGraph footpaths 
       std::vector<Way*> GetFootPaths();
 
-      std::vector<Node*> GetConstrustions();
+      std::vector<Node*> GetConstructions();
       
+      std::vector<Node*> GetExplored();
+
 
       // Return ways 
       std::vector<Way*> GetWays();

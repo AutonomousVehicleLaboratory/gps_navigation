@@ -141,6 +141,8 @@ namespace gps_navigation{
       std::vector<Node*> RetrieveTrafficSignals();
       std::vector<Way*> RetrieveFootPaths();
       std::vector<Node*> RetrieveConstructions();
+      std::vector<Node*> RetrieveExplored();
+
     protected:
       void ConnectEdge(std::pair<int, Node*> startNodePair, std::pair<int, Node*> endNodePair, double weight);
       void ConnectImplicitEdge(std::pair<int, Node*> startNodePair, std::pair<int, Node*> endNodePair, double weight);

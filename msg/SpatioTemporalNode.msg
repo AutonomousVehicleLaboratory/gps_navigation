@@ -1,14 +1,27 @@
 # Node ID
 uint32 id
 
-# Node Type: Traversed (0), Planned (1), Pose(2), Road Other(3)
+# Node Type: (0) Stop (1), Crossing (2), Signal(3), 
+#            (3) Traversed Point, (4) Planned Point
+#            (5) FootPath, (6) Road Element
 uint32 type
 
-# Relative (x, y) position to ego-vehicle Pose(2). Units in meters.
-geometry_msgs/Point[] position
+# Graph ID: unique identifier utilized for graph search
+uint32 graph_id
 
-# Edges assigned by connectivity
-uint32[] neighbors
+# Latitude/Longitude of point
+float64 lat
+float64 lon
+
+# Edges:
+bool has_neighbors
+uint32[] edges
+
+# Relative (x, y) position to ego-vehicle Pose(2). Units in meters.
+geometry_msgs/Point position
+
+
+
 
  
 

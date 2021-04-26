@@ -16,6 +16,7 @@
 #include <gps_navigation/graph.h>
 #include <gps_navigation/utils.h>
 #include <gps_navigation/render_bev.h>
+#include <gps_navigation/SpatioTemporalGraph.h>
 #include <vector>
 #include <nav_msgs/Path.h>
 #include <visualization_msgs/Marker.h>
@@ -23,6 +24,8 @@
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/Imu.h>
+#include <geometry_msgs/Point.h>
+
 #include <std_msgs/Float64.h>
 #include <cv_bridge/cv_bridge.h>
 
@@ -36,6 +39,15 @@ namespace gps_navigation{
       void ImuCallback(const sensor_msgs::Imu::ConstPtr& msg);
       void SpeedCallback(const std_msgs::Float64::ConstPtr& msg);
       void PublishGpsMap();
+
+      SpatioTemporalGraph ParseGraph(std::vector<Node*> stops,
+                                     std::vector<Node*> crossings,
+                                     std::vector<Node*> signals,
+                                     std::vector<Way*> footpaths,
+                                     std::vector<Node*> traversed_path,
+                                     std::vector<Node*> planned_path,
+                                     std::vector<Node*> local_network);
+
       visualization_msgs::Marker GetMarker(int marker_type, long id, ros::Time time, double x, double y, double z, double yaw);
       
       visualization_msgs::MarkerArray VisMarkersFromNodes(std::vector<Node*> nodes, int marker_type, float color_r, float color_g, float color_b);
@@ -46,6 +58,7 @@ namespace gps_navigation{
       nav_msgs::Path VisualizePath(std::vector<Node*> path);
       void VisualizeFootPaths(std::vector<Way*> ways);
       nav_msgs::Path VisualizeNetwork();
+
       
       // Publishers   
       ros::NodeHandle n;
@@ -61,11 +74,14 @@ namespace gps_navigation{
       ros::Publisher routed_bev_pub;
       ros::Publisher conc_bev_pub;
 
+      ros::Publisher graph_pub;
+
       // Graph Based visualization
       ros::Publisher g_stops_pub;
       ros::Publisher g_crossings_pub;
       ros::Publisher g_signals_pub;
       ros::Publisher g_constructions_pub;
+      ros::Publisher g_network_pub;
       
   
       // Subscribers

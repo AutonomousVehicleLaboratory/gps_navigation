@@ -58,6 +58,7 @@ add_message_files(
   FILES
   SpatioTemporalGraph.msg
   SpatioTemporalNode.msg  
+  SpatioTemporalWay.msg  
 )
 
 ## Generate services in the 'srv' folder

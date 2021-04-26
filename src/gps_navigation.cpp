@@ -385,8 +385,11 @@ namespace gps_navigation{
   std::vector<Way*> Map::GetWays(){
     return ways_;
   }
-  std::vector<Node*> Map::GetConstrustions(){
+  std::vector<Node*> Map::GetConstructions(){
     return osm_graph_.RetrieveConstructions();
+  }
+  std::vector<Node*> Map::GetExplored(){
+    return osm_graph_.RetrieveExplored();
   }
 
   void Map::ResetPlan(){
@@ -775,7 +778,7 @@ namespace gps_navigation{
   }
   
   std::vector<Node*> Navigation::GetPlannedNodes(){
-    return std::vector<Node*>(current_plan_.begin() + next_node_index_+1, current_plan_.end());
+    return std::vector<Node*>(current_plan_.begin() + next_node_index_, current_plan_.end());
   }
    
   

@@ -23,12 +23,14 @@ namespace gps_navigation{
     unrouted_bev_pub = n.advertise<sensor_msgs::Image>("/unrouted_osm", 1000);
     routed_bev_pub = n.advertise<sensor_msgs::Image>("/routed_osm", 1000);
     conc_bev_pub = n.advertise<sensor_msgs::Image>("/concat_osm", 1000);
+    graph_pub = n.advertise<SpatioTemporalGraph>("/osm_graphs", 1000);
 
     // Graph Based Visualization
     g_stops_pub = n.advertise<visualization_msgs::MarkerArray>("/stop_signs", 10);
     g_crossings_pub = n.advertise<visualization_msgs::MarkerArray>("/crossings", 10);
     g_signals_pub = n.advertise<visualization_msgs::MarkerArray>("/traffic_signals", 10);
     g_constructions_pub = n.advertise<visualization_msgs::Marker>("/constructions", 10);
+    g_network_pub = n.advertise<visualization_msgs::MarkerArray>("/local_network", 10);
 
 
     gps_pose_sub = n.subscribe("/lat_lon", 1000, &GpsNavigationNode::GpsCallback, this);
@@ -175,7 +177,8 @@ namespace gps_navigation{
       std::vector<Way*> footpaths = gps_navigator->GetMap()->GetFootPaths(); 
       std::vector<Node*> traversed_path = gps_navigator->GetTraversedNodes();
       std::vector<Node*> planned_path = gps_navigator->GetPlannedNodes();
-      std::vector<Node*> constructions = gps_navigator->GetMap()->GetConstrustions();
+      std::vector<Node*> constructions = gps_navigator->GetMap()->GetConstructions();
+      std::vector<Node*> explored_nodes = gps_navigator->GetMap()->GetExplored();
       //std::vector<Way*> footpaths = gps_navigator->GetMap()->footpaths_; 
 
       // Visualize stops, crossings and signals
@@ -185,10 +188,12 @@ namespace gps_navigation{
       visualization_msgs::Marker construction_markers = VisMarkersFromNodes2(constructions, 0, 1.0, 0.5, 0.0);
 
 
+      visualization_msgs::MarkerArray local_network_markers = VisMarkersFromNodes(explored_nodes, 0, 1.0, 0.5, 0.0); 
       g_stops_pub.publish(stop_markers);
       g_crossings_pub.publish(crossing_markers);
       g_signals_pub.publish(signal_markers);
       g_constructions_pub.publish(construction_markers);
+      g_network_pub.publish(local_network_markers);
 
       // Visualize footpaths
       VisualizeFootPaths(footpaths);
@@ -201,6 +206,10 @@ namespace gps_navigation{
       nav_msgs::Path plan_path_msg = VisualizePath(planned_path);
       planned_path_viz.publish(plan_path_msg);
 
+      // Publish Graph Information
+      SpatioTemporalGraph graph_msg = ParseGraph(stops, crossings, signals, footpaths, traversed_path, planned_path, explored_nodes);
+
+      graph_pub.publish(graph_msg);
       // For OSM bev
       // TODO:
       /*
@@ -230,6 +239,152 @@ namespace gps_navigation{
       }
       */
     }
+  }
+  SpatioTemporalGraph GpsNavigationNode::ParseGraph(std::vector<Node*> stops,
+                                 std::vector<Node*> crossings,
+                                 std::vector<Node*> signals,
+                                 std::vector<Way*> footpaths,
+                                 std::vector<Node*> traversed_path,
+                                 std::vector<Node*> planned_path,
+                                 std::vector<Node*> local_network){
+
+    SpatioTemporalGraph graph;
+    SpatioTemporalNode curr_node;
+    //SpatioTemporalWay curr_way;
+    geometry_msgs::Point curr_point;
+
+    graph.header.stamp = ros::Time::now();
+    Node* ego_ref;
+
+    // Reference Node (last vehicle pose)
+    if(traversed_path.size())
+      ego_ref = traversed_path.back();
+    else
+      return graph;
+    
+
+    std::pair<double, double> x_y;
+
+    // Parse Node elements
+    unsigned int id = 0;
+
+    // Stops
+    for(auto stop: stops){
+      curr_node.id = id++;
+      curr_node.type = 0;
+      curr_node.graph_id = stop->graph_id;
+      curr_node.lat = stop->lat;
+      curr_node.lon = stop->lon;
+      
+      curr_node.has_neighbors = false;
+      x_y = RelativeDisplacement(ego_ref, stop);
+      curr_point.x = x_y.first; 
+      curr_point.y = x_y.second; 
+      curr_node.position = curr_point;
+      graph.stops.push_back(curr_node);
+    }
+
+    // Crossings
+    id = 0;
+    for(auto crossing: crossings){
+      x_y = RelativeDisplacement(ego_ref, crossing);
+      curr_node.id= id++;
+      curr_node.type = 1;
+      curr_node.graph_id = crossing->graph_id;
+      curr_node.lat = crossing->lat;
+      curr_node.lon = crossing->lon;
+
+      curr_node.has_neighbors = false;
+      curr_point.x = x_y.first; 
+      curr_point.y = x_y.second; 
+      curr_node.position = curr_point;
+      graph.crossings.push_back(curr_node);
+    }
+    
+    // Signals
+    id = 0;
+    for(auto signal: signals){
+      curr_node.id = id++;
+      curr_node.type = 2;
+      curr_node.graph_id = signal->graph_id;
+      curr_node.lat = signal->lat;
+      curr_node.lon = signal->lon;
+      curr_node.has_neighbors = false;
+
+      x_y = RelativeDisplacement(ego_ref, signal);
+      curr_point.x = x_y.first; 
+      curr_point.y = x_y.second; 
+      curr_node.position = curr_point;
+      graph.crossings.push_back(curr_node);
+    }
+
+    // Traversed Path
+    id = 0;
+    for(auto wp: traversed_path){
+      x_y = RelativeDisplacement(ego_ref, wp);
+      curr_node.id = id++;
+      curr_node.type = 3;
+      curr_node.graph_id = wp->graph_id;
+      curr_node.lat = wp->lat;
+      curr_node.lon = wp->lon;
+      curr_node.has_neighbors = true;
+
+      //if(wp + 1)
+      //  curr_node.edges.push_back((wp + 1)->graph_id);
+      curr_point.x = x_y.first; 
+      curr_point.y = x_y.second; 
+      curr_node.position = curr_point;
+      graph.traversed_path.push_back(curr_node);
+    }
+
+    // Planned Path
+    id = 0;
+    for(auto wp: planned_path){
+      curr_node.id = id++;
+      curr_node.type = 4;
+      curr_node.graph_id = wp->graph_id;
+      curr_node.lat = wp->lat;
+      curr_node.lon = wp->lon;
+      curr_node.has_neighbors = true;
+      x_y = RelativeDisplacement(ego_ref, wp);
+      curr_point.x = x_y.first; 
+      curr_point.y = x_y.second; 
+      curr_node.position = curr_point;
+      graph.planned_path.push_back(curr_node);
+    }
+  
+    // Road Network
+    id = 0;
+    for(auto network_node: local_network){
+      curr_node.id = id++;
+      curr_node.type = 6;
+      curr_node.graph_id = network_node->graph_id;
+      curr_node.lat = network_node->lat;
+      curr_node.lon = network_node->lon;
+      x_y = RelativeDisplacement(ego_ref, network_node);
+      curr_point.x = x_y.first; 
+      curr_point.y = x_y.second; 
+      curr_node.position = curr_point;
+
+      curr_node.edges.clear();
+
+      if(network_node->edges){
+        curr_node.has_neighbors = true;
+        
+        for(auto neighbor: network_node->edges->nodes){
+          if(neighbor)
+            curr_node.edges.push_back(neighbor->graph_id); 
+        }
+      }
+      graph.road_network.push_back(curr_node);
+    }
+    
+    
+    
+
+    // Parse Way elements
+
+    return graph;
   }
   visualization_msgs::Marker GpsNavigationNode::GetMarker(int marker_type, long id, ros::Time ts, double x, double y, double z, double yaw){
     visualization_msgs::Marker marker;

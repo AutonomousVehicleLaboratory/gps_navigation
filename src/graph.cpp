@@ -303,6 +303,7 @@ namespace gps_navigation{
       nearby_traffic_signals_ = {};
       nearby_footpaths_ = {};
       nearby_construction_ = {};
+      explored_.clear();
     }
     std::map<NodeType, std::string> logMaps = \
           {{NodeType::kStopSign, "kStopSign"},{NodeType::kCrossing, "kCrossing"},{NodeType::kTrafficSignal, "kTrafficSignal"}, {NodeType::kOther, "kOther"}, {NodeType::kRoad, "kRoad"}};
@@ -402,4 +403,8 @@ namespace gps_navigation{
   std::vector<Node*> OsmGraph::RetrieveConstructions(){
     return nearby_construction_;
   }
+  std::vector<Node*> OsmGraph::RetrieveExplored(){
+    return explored_;
+  }
+  
 }
