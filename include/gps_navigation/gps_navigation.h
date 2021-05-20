@@ -156,7 +156,7 @@ namespace gps_navigation{
       // Updates state of ego vehicle using GNSS and odom only
       // returns a graph around vehicle
       //std::vector<Node*> GenerateSTGraph(double lat, double lon, double v, double t);
-      void GenerateSTGraph(double lat, double lon, double v, double t);
+      void GenerateSTGraph(double lat, double lon, double v, double t, int k_bfs);
 
       // Updates state of ego vehicle as reported by GNSS, odom and IMU 
       std::tuple<bool, long, double, double, double> UpdateState(double lat, double lon, double v, double w_z, double a_x, double t);

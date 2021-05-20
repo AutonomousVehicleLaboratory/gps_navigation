@@ -2,9 +2,10 @@
     <node pkg="gps_navigation" type="gps_navigation_node" name="gps_navigation" output="screen">
 <!--     	<param name="osm_path" value= "/mnt/avl_shared/user-files/dpaz/DPGN/ucsd.osm"/>
  -->
- 		<param name="osm_path" value= "/home/users/hao/ucsd-03-12-2021.osm"/>
+ 		<param name="osm_path" value= "/home/dfpazr/Documents/CogRob/avl/planning/gps_navigation/verification_ws/src/gps_navigation/ucsd-03-12-2021.osm"/>
     	<param name="radius" value="10000"/>
-    	<param name="replanThreshold" value="10"/>
+    	<param name="replan_threshold" value="20"/>
+    	<param name="bfs_horizon" value="80"/>
     </node>
     <node pkg="gps_navigation" type="nmea_to_navsat.py" name="nmea2navsat" output="screen" />
 

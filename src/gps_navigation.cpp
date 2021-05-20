@@ -479,7 +479,7 @@ namespace gps_navigation{
     return false;
   }
 
-  void Navigation::GenerateSTGraph(double lat, double lon, double v, double t){
+  void Navigation::GenerateSTGraph(double lat, double lon, double v, double t, int k_bfs){
     
     std::vector<Node*> st_graph;
     Node* veh_pose;
@@ -546,7 +546,8 @@ namespace gps_navigation{
     else{
       // Use odometry to update position
       double dt = t - t_prev_;
-      double dd = 2*v*dt;
+      //double dd = 2*v*dt;
+      double dd = v*dt;
       t_prev_ = t;
       
       //state_.yaw_ego += w_z * dt;
@@ -593,9 +594,9 @@ namespace gps_navigation{
       
     }
 
-    // TODO: Extract graph
+    // Extract graph
     veh_pose = current_plan_[next_node_index_];
-    GetMap()->FindRoadFeatures(veh_pose, 40);
+    GetMap()->FindRoadFeatures(veh_pose, k_bfs);
 
   }
 
@@ -649,7 +650,7 @@ namespace gps_navigation{
                               (x_y_ego.second - state_.y_ego)*(x_y_ego.second - state_.y_ego));
       
       // If the new GPS location is too far from pose estimated by IMU
-      if(dist_diff >= 2.0){
+      if(dist_diff >= 4.0){
         // If this node does not contain orientation information
         if((start_node_->dx_dy.first == 0) && (start_node_->dx_dy.second == 0)){
           return current_state;

@@ -24,6 +24,7 @@
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/Imu.h>
+#include <pacmod_msgs/VehicleSpeedRpt.h>
 #include <geometry_msgs/Point.h>
 
 #include <std_msgs/Float64.h>
@@ -37,7 +38,7 @@ namespace gps_navigation{
       void ClickedPointCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
       void GpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg);
       void ImuCallback(const sensor_msgs::Imu::ConstPtr& msg);
-      void SpeedCallback(const std_msgs::Float64::ConstPtr& msg);
+      void SpeedCallback(const pacmod_msgs::VehicleSpeedRpt::ConstPtr& msg);
       void PublishGpsMap();
 
       SpatioTemporalGraph ParseGraph(std::vector<Node*> stops,
@@ -116,11 +117,12 @@ namespace gps_navigation{
       double y_dest = 0.0;
       sensor_msgs::Imu twist;
       double ego_speed = 0.0;
-      double replanThreshold = 0.0;
+      double replan_threshold = 0.0;
       bool dt_avail = false;
       ros::Duration dt;
       ros::Time current_t;
       double bearing;
+      int bfs_horizon;
 
       // Updated upon IMU callback
       std::tuple<bool, long, double, double, double> ego_state;

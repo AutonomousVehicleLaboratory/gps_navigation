@@ -35,21 +35,25 @@ namespace gps_navigation{
 
     gps_pose_sub = n.subscribe("/lat_lon", 1000, &GpsNavigationNode::GpsCallback, this);
     imu_sub = n.subscribe("/livox/imu", 1000, &GpsNavigationNode::ImuCallback, this);
-    speed_sub = n.subscribe("/pacmod/as_tx/vehicle_speed", 1000, &GpsNavigationNode::SpeedCallback, this);
+    //speed_sub = n.subscribe("/pacmod/as_tx/vehicle_speed", 1000, &GpsNavigationNode::SpeedCallback, this);
+    speed_sub = n.subscribe("/pacmod/parsed_tx/vehicle_speed_rpt", 1000, &GpsNavigationNode::SpeedCallback, this);
     clicked_point = n.subscribe("/move_base_simple/goal", 1000, &GpsNavigationNode::ClickedPointCallback, this);
     
     // Initialize map
-    //std::string osm_path = "/mnt/avl_shared/user-files/dpaz/DPGN/ucsd.osm";
     std::string osm_path;
     double radius;
+
     if(n.getParam("/gps_navigation/osm_path", osm_path)){
       std::cout<<"The open street map file's path is set to be: "<<osm_path<<"\n";
     }
     if(n.getParam("/gps_navigation/radius", radius)){
       std::cout<<"The search radius for construction is set to be: "<<radius<<"\n";
     }
-    if(n.getParam("/gps_navigation/replanThreshold", replanThreshold)){
-      std::cout<<"The replan threshold is set to be: "<<replanThreshold<<"\n";
+    if(n.getParam("/gps_navigation/replan_threshold", replan_threshold)){
+      std::cout<<"The replan threshold is set to be: "<<replan_threshold<<"\n";
+    }
+    if(n.getParam("/gps_navigation/bfs_horizon", bfs_horizon)){
+      std::cout<<"The replan threshold is set to be: "<< bfs_horizon <<"\n";
     }
 
 
@@ -135,7 +139,6 @@ namespace gps_navigation{
     }
 
     if(gps_avail && plan.size()){
-      // TODO: 
       //ego_state = gps_navigator->UpdateState(lat_pose, lon_pose,  ego_speed, 
       //                                                           twist.angular_velocity.z, twist.linear_acceleration.x, ros::Time::now().toSec());
       double dist = INFINITY;
@@ -146,10 +149,11 @@ namespace gps_navigation{
         dist = std::min(dist, GreatCircleDistance(node, start_node));
       }
       delete start_node;
-      if(dist>replanThreshold){
+      if(dist>replan_threshold){
         has_clicked_point = true;
       }
-      gps_navigator->GenerateSTGraph(lat_pose, lon_pose, ego_speed, ros::Time::now().toSec());
+      gps_navigator->GenerateSTGraph(lat_pose, lon_pose, ego_speed, 
+                                     ros::Time::now().toSec(), bfs_horizon);
     }
     
     if(new_plan){
@@ -158,12 +162,54 @@ namespace gps_navigation{
     } 
     return; 
   }
-  void GpsNavigationNode::SpeedCallback(const std_msgs::Float64::ConstPtr& msg){
-    ego_speed = msg->data;
+  void GpsNavigationNode::SpeedCallback(const pacmod_msgs::VehicleSpeedRpt::ConstPtr& msg){
+    ego_speed = msg->vehicle_speed;
+
+    /*
+    if(gps_avail && plan.size()){
+      gps_navigator->GenerateSTGraph(lat_pose, lon_pose, ego_speed, 
+                                     ros::Time::now().toSec(), bfs_horizon);
+  
+    }*/
+    /*
+    if(gps_avail && has_clicked_point){
+      // Closest node wrt position of ego vehicle
+      gps_navigator->SetStart(lat_pose, lon_pose);
+      // Destination point manually set
+      gps_navigator->SetTargetRelative(x_dest, y_dest);
+      plan = gps_navigator->Plan();
+      std::cout<<"Planned New trajectory with plan size: "<<plan.size()<<std::endl;
+      new_plan = true;
+      has_clicked_point = false;
+      
+      new_gps_msg = false;
+      gps_navigator->ResetPlan();
+    }
 
     if(gps_avail && plan.size()){
-      gps_navigator->GenerateSTGraph(lat_pose, lon_pose, ego_speed, ros::Time::now().toSec());
+
+      double dist = INFINITY;
+      auto start_node = new Node();
+      start_node->lat = lat_pose;
+      start_node->lon = lon_pose;
+      for(auto node: plan){
+        dist = std::min(dist, GreatCircleDistance(node, start_node));
+      }
+      delete start_node;
+      if(dist>replan_threshold){
+        has_clicked_point = true;
+      }
+      //gps_navigator->GenerateSTGraph(lat_pose, lon_pose, ego_speed, 
+      //                               ros::Time::now().toSec(), bfs_horizon);
+      gps_navigator->GenerateSTGraph(lat_pose, lon_pose, ego_speed, 
+                                     msg->header.stamp.toSec(), bfs_horizon);
     }
+    
+    if(new_plan){
+      nav_msgs::Path shortest_path = VisualizePath(plan);
+      shortest_path_viz.publish(shortest_path);
+    } 
+    */
     
   }
   
@@ -268,6 +314,12 @@ namespace gps_navigation{
     // Parse Node elements
     unsigned int id = 0;
 
+    // Get rotation angle wrt pose of the car
+    x_y = RelativeDisplacement(ego_ref, planned_path[0]);
+    double yaw = atan2(x_y.first, x_y.second);
+    double R_cos = cos(yaw);
+    double R_sin = sin(yaw);
+
     // Stops
     for(auto stop: stops){
       curr_node.id = id++;
@@ -278,8 +330,10 @@ namespace gps_navigation{
       
       curr_node.has_neighbors = false;
       x_y = RelativeDisplacement(ego_ref, stop);
-      curr_point.x = x_y.first; 
-      curr_point.y = x_y.second; 
+      //curr_point.x = x_y.first; 
+      //curr_point.y = x_y.second; 
+      curr_point.x = x_y.first*R_cos - x_y.second*R_sin; 
+      curr_point.y = x_y.first*R_sin + x_y.second*R_cos; 
       curr_node.position = curr_point;
       graph.stops.push_back(curr_node);
     }
@@ -295,8 +349,10 @@ namespace gps_navigation{
       curr_node.lon = crossing->lon;
 
       curr_node.has_neighbors = false;
-      curr_point.x = x_y.first; 
-      curr_point.y = x_y.second; 
+      //curr_point.x = x_y.first; 
+      //curr_point.y = x_y.second; 
+      curr_point.x = x_y.first*R_cos - x_y.second*R_sin; 
+      curr_point.y = x_y.first*R_sin + x_y.second*R_cos; 
       curr_node.position = curr_point;
       graph.crossings.push_back(curr_node);
     }
@@ -312,8 +368,10 @@ namespace gps_navigation{
       curr_node.has_neighbors = false;
 
       x_y = RelativeDisplacement(ego_ref, signal);
-      curr_point.x = x_y.first; 
-      curr_point.y = x_y.second; 
+      //curr_point.x = x_y.first; 
+      //curr_point.y = x_y.second; 
+      curr_point.x = x_y.first*R_cos - x_y.second*R_sin; 
+      curr_point.y = x_y.first*R_sin + x_y.second*R_cos; 
       curr_node.position = curr_point;
       graph.crossings.push_back(curr_node);
     }
@@ -331,8 +389,10 @@ namespace gps_navigation{
 
       //if(wp + 1)
       //  curr_node.edges.push_back((wp + 1)->graph_id);
-      curr_point.x = x_y.first; 
-      curr_point.y = x_y.second; 
+      //curr_point.x = x_y.first; 
+      //curr_point.y = x_y.second; 
+      curr_point.x = x_y.first*R_cos - x_y.second*R_sin; 
+      curr_point.y = x_y.first*R_sin + x_y.second*R_cos; 
       curr_node.position = curr_point;
       graph.traversed_path.push_back(curr_node);
     }
@@ -347,8 +407,10 @@ namespace gps_navigation{
       curr_node.lon = wp->lon;
       curr_node.has_neighbors = true;
       x_y = RelativeDisplacement(ego_ref, wp);
-      curr_point.x = x_y.first; 
-      curr_point.y = x_y.second; 
+      //curr_point.x = x_y.first; 
+      //curr_point.y = x_y.second; 
+      curr_point.x = x_y.first*R_cos - x_y.second*R_sin; 
+      curr_point.y = x_y.first*R_sin + x_y.second*R_cos; 
       curr_node.position = curr_point;
       graph.planned_path.push_back(curr_node);
     }
@@ -362,8 +424,10 @@ namespace gps_navigation{
       curr_node.lat = network_node->lat;
       curr_node.lon = network_node->lon;
       x_y = RelativeDisplacement(ego_ref, network_node);
-      curr_point.x = x_y.first; 
-      curr_point.y = x_y.second; 
+      //curr_point.x = x_y.first; 
+      //curr_point.y = x_y.second; 
+      curr_point.x = x_y.first*R_cos - x_y.second*R_sin; 
+      curr_point.y = x_y.first*R_sin + x_y.second*R_cos; 
       curr_node.position = curr_point;
 
       curr_node.edges.clear();
