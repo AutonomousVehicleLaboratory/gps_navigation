@@ -10,3 +10,34 @@ This ROS node inludes C++ implementations for extracting OpenStreetMaps(OSM), pe
   
   * *utils.cpp*: Methods for measuring relative distance using lat/lon and the relative map frame.
   * *nmea_to_navstat.py*: Converts NMEA sentences into longitude and latitude.
+
+
+The code associated with this repository corresponds to the following research work. If you find it useful for research, please consider citing our work.
+
+```
+@inproceedings{paz22tridentv2,
+ address = {Philadelphia, PA},
+ author = {David Paz and Hao Xiang and Andrew Liang and Henrik Iskov Christensen},
+ booktitle = {Intl Conf of Robotics and Automation (ICRA)},
+ month = {May},
+ organization = {IEEE},
+ pages = { },
+ title = {TridentNetV2: Lightweight Graphical Global Plan Representations for Dynamic Trajectory Generation },
+ year = {2022}
+}
+```
+
+```
+@inproceedings{paz21:tridentnet,
+ address = {Singapore},
+ author = {David Paz and Henry Zhang and Henrik I Christensen},
+ booktitle = {Intelligent Autonomous Systems-16},
+ month = {June},
+ note = {(Best paper)},
+ title = {TridentNet: A Conditional Generative Model for Dynamic Trajectory Generation},
+ year = {2021}
+}
+```
+
+
+
