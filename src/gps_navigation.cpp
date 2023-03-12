@@ -543,56 +543,56 @@ namespace gps_navigation{
       }
 
     }
-    else{
-      // Use odometry to update position
-      double dt = t - t_prev_;
-      //double dd = 2*v*dt;
-      double dd = v*dt;
-      t_prev_ = t;
+    // else{
+    //   // Use odometry to update position
+    //   double dt = t - t_prev_;
+    //   //double dd = 2*v*dt;
+    //   double dd = v*dt;
+    //   t_prev_ = t;
       
-      //state_.yaw_ego += w_z * dt;
-      double dx = dd*cos(state_.current_yaw);
-      double dy = dd*sin(state_.current_yaw);
-      double predicted_x = state_.x_ego + dx;
-      double predicted_y = state_.y_ego + dy;
-      double dist_to_next = sqrt(pow(predicted_x - x_next_, 2) + pow(predicted_y - y_next_, 2));
+    //   //state_.yaw_ego += w_z * dt;
+    //   double dx = dd*cos(state_.current_yaw);
+    //   double dy = dd*sin(state_.current_yaw);
+    //   double predicted_x = state_.x_ego + dx;
+    //   double predicted_y = state_.y_ego + dy;
+    //   double dist_to_next = sqrt(pow(predicted_x - x_next_, 2) + pow(predicted_y - y_next_, 2));
       
       
-      // Update vehicle state with respect to planned path
-      // If distance to next predicted state is less than a threshold, update
-      if(dist_to_next < 2.0){
-        std::pair<double, double> dx_dy1 = RelativeDisplacement(ref_origin_, 
-                                                               current_plan_[next_node_index_]);
-        std::pair<double, double> dx_dy2 = RelativeDisplacement(ref_origin_, 
-                                                               current_plan_[next_node_index_+1]);
-        std::pair<double, double> dx_dy3 = RelativeDisplacement(ref_origin_, 
-                                                               current_plan_[next_node_index_+2]);
-        state_.current_yaw = M_PI + atan2((dx_dy1.second - dx_dy2.second),
-                               (dx_dy1.first - dx_dy2.first));
-        state_.next_yaw = M_PI + atan2((dx_dy2.second - dx_dy3.second),
-                               (dx_dy2.first - dx_dy3.first));
+    //   // Update vehicle state with respect to planned path
+    //   // If distance to next predicted state is less than a threshold, update
+    //   if(dist_to_next < 2.0){
+    //     std::pair<double, double> dx_dy1 = RelativeDisplacement(ref_origin_, 
+    //                                                            current_plan_[next_node_index_]);
+    //     std::pair<double, double> dx_dy2 = RelativeDisplacement(ref_origin_, 
+    //                                                            current_plan_[next_node_index_+1]);
+    //     std::pair<double, double> dx_dy3 = RelativeDisplacement(ref_origin_, 
+    //                                                            current_plan_[next_node_index_+2]);
+    //     state_.current_yaw = M_PI + atan2((dx_dy1.second - dx_dy2.second),
+    //                            (dx_dy1.first - dx_dy2.first));
+    //     state_.next_yaw = M_PI + atan2((dx_dy2.second - dx_dy3.second),
+    //                            (dx_dy2.first - dx_dy3.first));
 
-        // Update starting pose
-        state_.x_ego = x_next_;
-        state_.y_ego = y_next_;
-        // Update distance based on remaining distance
-        dd -= dist_to_next;
-        // Update orientation based on next waypoint
-        next_node_index_ += 1;
-        x_next_ = dx_dy2.first; 
-        y_next_ = dx_dy2.second; 
+    //     // Update starting pose
+    //     state_.x_ego = x_next_;
+    //     state_.y_ego = y_next_;
+    //     // Update distance based on remaining distance
+    //     dd -= dist_to_next;
+    //     // Update orientation based on next waypoint
+    //     next_node_index_ += 1;
+    //     x_next_ = dx_dy2.first; 
+    //     y_next_ = dx_dy2.second; 
 
-      }
+    //   }
       
        
-      //veh_pose = current_plan_[next_node_index_];
+    //   //veh_pose = current_plan_[next_node_index_];
 
-      state_.x_ego += dd*cos(state_.current_yaw);
-      state_.y_ego += dd*sin(state_.current_yaw);
-      //current_state = std::make_tuple(true, next_node_index_, state_.x_ego, state_.y_ego, state_.sim_yaw); 
+    //   state_.x_ego += dd*cos(state_.current_yaw);
+    //   state_.y_ego += dd*sin(state_.current_yaw);
+    //   //current_state = std::make_tuple(true, next_node_index_, state_.x_ego, state_.y_ego, state_.sim_yaw); 
        
       
-    }
+    // }
 
     // Extract graph
     veh_pose = current_plan_[next_node_index_];

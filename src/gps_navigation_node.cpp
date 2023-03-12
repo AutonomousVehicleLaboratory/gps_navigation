@@ -101,6 +101,44 @@ namespace gps_navigation{
   
     gps_viz.points.push_back(gps_point);
     gps_viz_pub.publish(gps_viz);
+
+    if(gps_avail && has_clicked_point){
+      // Closest node wrt position of ego vehicle
+      gps_navigator->SetStart(lat_pose, lon_pose);
+      // Destination point manually set
+      gps_navigator->SetTargetRelative(x_dest, y_dest);
+      plan = gps_navigator->Plan();
+      std::cout<<"Planned New trajectory with plan size: "<<plan.size()<<std::endl;
+      new_plan = true;
+      has_clicked_point = false;
+      
+      new_gps_msg = false;
+      gps_navigator->ResetPlan();
+    }
+
+    if(gps_avail && plan.size()){
+      //ego_state = gps_navigator->UpdateState(lat_pose, lon_pose,  ego_speed, 
+      //                                                           twist.angular_velocity.z, twist.linear_acceleration.x, ros::Time::now().toSec());
+      double dist = INFINITY;
+      auto start_node = new Node();
+      start_node->lat = lat_pose;
+      start_node->lon = lon_pose;
+      for(auto node: plan){
+        dist = std::min(dist, GreatCircleDistance(node, start_node));
+      }
+      delete start_node;
+      if(dist>replan_threshold){
+        has_clicked_point = true;
+      }
+      gps_navigator->GenerateSTGraph(lat_pose, lon_pose, ego_speed, 
+                                     ros::Time::now().toSec(), bfs_horizon);
+    }
+    
+    if(new_plan){
+      nav_msgs::Path shortest_path = VisualizePath(plan);
+      shortest_path_viz.publish(shortest_path);
+    } 
+    return; 
   }
   
   void GpsNavigationNode::ImuCallback(const sensor_msgs::Imu::ConstPtr& msg){
@@ -214,6 +252,10 @@ namespace gps_navigation{
   }
   
   void GpsNavigationNode::PublishGpsMap(){
+
+    // visualize state without plan
+
+    // if a plan is set 
     if(gps_avail && plan.size()){
 
       // For graph generation method, visualize markers/paths
