@@ -33,7 +33,7 @@ namespace gps_navigation{
     g_network_pub = n.advertise<visualization_msgs::MarkerArray>("/local_network", 10);
 
 
-    gps_pose_sub = n.subscribe("/lat_lon", 1000, &GpsNavigationNode::GpsCallback, this);
+    gps_pose_sub = n.subscribe("/fix", 1000, &GpsNavigationNode::GpsCallback, this);
     imu_sub = n.subscribe("/livox/imu", 1000, &GpsNavigationNode::ImuCallback, this);
     //speed_sub = n.subscribe("/pacmod/as_tx/vehicle_speed", 1000, &GpsNavigationNode::SpeedCallback, this);
     speed_sub = n.subscribe("/pacmod/parsed_tx/vehicle_speed_rpt", 1000, &GpsNavigationNode::SpeedCallback, this);
@@ -82,7 +82,7 @@ namespace gps_navigation{
     gps_pose->lon = msg->longitude;
     
     visualization_msgs::Marker gps_viz;
-    gps_viz.header.frame_id = "/map";
+    gps_viz.header.frame_id = "map";
     gps_viz.header.stamp = ros::Time::now();
     gps_viz.ns = "points_and_lines";
     gps_viz.id = 0;

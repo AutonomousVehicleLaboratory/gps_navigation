@@ -7,6 +7,5 @@
     	<param name="replan_threshold" value="20"/>
     	<param name="bfs_horizon" value="80"/>
     </node>
-    <node pkg="gps_navigation" type="nmea_to_navsat.py" name="nmea2navsat" output="screen" />
 
 </launch>
