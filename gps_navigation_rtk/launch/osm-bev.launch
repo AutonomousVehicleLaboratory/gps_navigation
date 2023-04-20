@@ -1,5 +1,5 @@
 <launch>
-    <node pkg="gps_navigation" type="gps_navigation_node" name="gps_navigation" output="screen">
+    <node pkg="gps_navigation_rtk" type="gps_navigation_rtk_node" name="gps_navigation_rtk" output="screen">
 <!--     	<param name="osm_path" value= "/mnt/avl_shared/user-files/dpaz/DPGN/ucsd.osm"/>
  -->
  		<param name="osm_path" value= "/home/dfpazr/Documents/CogRob/avl/planning/gps_navigation/verification_ws/src/gps_navigation/ucsd-03-12-2021.osm"/>

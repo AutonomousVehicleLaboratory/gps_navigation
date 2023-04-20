@@ -25,7 +25,6 @@
 #include <sensor_msgs/NavSatFix.h>
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/Imu.h>
-#include <pacmod_msgs/VehicleSpeedRpt.h>
 #include <geometry_msgs/Point.h>
 
 #include <std_msgs/Float64.h>
@@ -39,7 +38,7 @@ namespace gps_navigation{
       void ClickedPointCallback(const geometry_msgs::PoseStamped::ConstPtr& msg);
       void GpsCallback(const sensor_msgs::NavSatFix::ConstPtr& msg);
       void ImuCallback(const sensor_msgs::Imu::ConstPtr& msg);
-      void SpeedCallback(const pacmod_msgs::VehicleSpeedRpt::ConstPtr& msg);
+      // void SpeedCallback(const pacmod_msgs::VehicleSpeedRpt::ConstPtr& msg);
       void PublishGpsMap();
 
       planner_msgs::SpatioTemporalGraph ParseGraph(std::vector<Node*> stops,

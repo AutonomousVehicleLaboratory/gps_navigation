@@ -36,7 +36,7 @@ namespace gps_navigation{
     gps_pose_sub = n.subscribe("/fix", 1000, &GpsNavigationNode::GpsCallback, this);
     imu_sub = n.subscribe("/livox/imu", 1000, &GpsNavigationNode::ImuCallback, this);
     //speed_sub = n.subscribe("/pacmod/as_tx/vehicle_speed", 1000, &GpsNavigationNode::SpeedCallback, this);
-    speed_sub = n.subscribe("/pacmod/parsed_tx/vehicle_speed_rpt", 1000, &GpsNavigationNode::SpeedCallback, this);
+    // speed_sub = n.subscribe("/pacmod/parsed_tx/vehicle_speed_rpt", 1000, &GpsNavigationNode::SpeedCallback, this);
     clicked_point = n.subscribe("/move_base_simple/goal", 1000, &GpsNavigationNode::ClickedPointCallback, this);
     
     // Initialize map
@@ -200,56 +200,56 @@ namespace gps_navigation{
     } 
     return; 
   }
-  void GpsNavigationNode::SpeedCallback(const pacmod_msgs::VehicleSpeedRpt::ConstPtr& msg){
-    ego_speed = msg->vehicle_speed;
+  // void GpsNavigationNode::SpeedCallback(const pacmod_msgs::VehicleSpeedRpt::ConstPtr& msg){
+  //   ego_speed = msg->vehicle_speed;
 
-    /*
-    if(gps_avail && plan.size()){
-      gps_navigator->GenerateSTGraph(lat_pose, lon_pose, ego_speed, 
-                                     ros::Time::now().toSec(), bfs_horizon);
+  //   /*
+  //   if(gps_avail && plan.size()){
+  //     gps_navigator->GenerateSTGraph(lat_pose, lon_pose, ego_speed, 
+  //                                    ros::Time::now().toSec(), bfs_horizon);
   
-    }*/
-    /*
-    if(gps_avail && has_clicked_point){
-      // Closest node wrt position of ego vehicle
-      gps_navigator->SetStart(lat_pose, lon_pose);
-      // Destination point manually set
-      gps_navigator->SetTargetRelative(x_dest, y_dest);
-      plan = gps_navigator->Plan();
-      std::cout<<"Planned New trajectory with plan size: "<<plan.size()<<std::endl;
-      new_plan = true;
-      has_clicked_point = false;
+  //   }*/
+  //   /*
+  //   if(gps_avail && has_clicked_point){
+  //     // Closest node wrt position of ego vehicle
+  //     gps_navigator->SetStart(lat_pose, lon_pose);
+  //     // Destination point manually set
+  //     gps_navigator->SetTargetRelative(x_dest, y_dest);
+  //     plan = gps_navigator->Plan();
+  //     std::cout<<"Planned New trajectory with plan size: "<<plan.size()<<std::endl;
+  //     new_plan = true;
+  //     has_clicked_point = false;
       
-      new_gps_msg = false;
-      gps_navigator->ResetPlan();
-    }
+  //     new_gps_msg = false;
+  //     gps_navigator->ResetPlan();
+  //   }
 
-    if(gps_avail && plan.size()){
+  //   if(gps_avail && plan.size()){
 
-      double dist = INFINITY;
-      auto start_node = new Node();
-      start_node->lat = lat_pose;
-      start_node->lon = lon_pose;
-      for(auto node: plan){
-        dist = std::min(dist, GreatCircleDistance(node, start_node));
-      }
-      delete start_node;
-      if(dist>replan_threshold){
-        has_clicked_point = true;
-      }
-      //gps_navigator->GenerateSTGraph(lat_pose, lon_pose, ego_speed, 
-      //                               ros::Time::now().toSec(), bfs_horizon);
-      gps_navigator->GenerateSTGraph(lat_pose, lon_pose, ego_speed, 
-                                     msg->header.stamp.toSec(), bfs_horizon);
-    }
+  //     double dist = INFINITY;
+  //     auto start_node = new Node();
+  //     start_node->lat = lat_pose;
+  //     start_node->lon = lon_pose;
+  //     for(auto node: plan){
+  //       dist = std::min(dist, GreatCircleDistance(node, start_node));
+  //     }
+  //     delete start_node;
+  //     if(dist>replan_threshold){
+  //       has_clicked_point = true;
+  //     }
+  //     //gps_navigator->GenerateSTGraph(lat_pose, lon_pose, ego_speed, 
+  //     //                               ros::Time::now().toSec(), bfs_horizon);
+  //     gps_navigator->GenerateSTGraph(lat_pose, lon_pose, ego_speed, 
+  //                                    msg->header.stamp.toSec(), bfs_horizon);
+  //   }
     
-    if(new_plan){
-      nav_msgs::Path shortest_path = VisualizePath(plan);
-      shortest_path_viz.publish(shortest_path);
-    } 
-    */
+  //   if(new_plan){
+  //     nav_msgs::Path shortest_path = VisualizePath(plan);
+  //     shortest_path_viz.publish(shortest_path);
+  //   } 
+  //   */
     
-  }
+  // }
   
   void GpsNavigationNode::PublishGpsMap(){
 
