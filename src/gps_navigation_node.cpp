@@ -23,7 +23,7 @@ namespace gps_navigation{
     unrouted_bev_pub = n.advertise<sensor_msgs::Image>("/unrouted_osm", 1000);
     routed_bev_pub = n.advertise<sensor_msgs::Image>("/routed_osm", 1000);
     conc_bev_pub = n.advertise<sensor_msgs::Image>("/concat_osm", 1000);
-    graph_pub = n.advertise<SpatioTemporalGraph>("/osm_graphs", 1000);
+    graph_pub = n.advertise<planner_msgs::SpatioTemporalGraph>("/osm_graphs", 1000);
 
     // Graph Based Visualization
     g_stops_pub = n.advertise<visualization_msgs::MarkerArray>("/stop_signs", 10);
@@ -295,7 +295,7 @@ namespace gps_navigation{
       planned_path_viz.publish(plan_path_msg);
 
       // Publish Graph Information
-      SpatioTemporalGraph graph_msg = ParseGraph(stops, crossings, signals, footpaths, traversed_path, planned_path, explored_nodes);
+      planner_msgs::SpatioTemporalGraph graph_msg = ParseGraph(stops, crossings, signals, footpaths, traversed_path, planned_path, explored_nodes);
 
       graph_pub.publish(graph_msg);
       // For OSM bev
@@ -328,7 +328,7 @@ namespace gps_navigation{
       */
     }
   }
-  SpatioTemporalGraph GpsNavigationNode::ParseGraph(std::vector<Node*> stops,
+  planner_msgs::SpatioTemporalGraph GpsNavigationNode::ParseGraph(std::vector<Node*> stops,
                                  std::vector<Node*> crossings,
                                  std::vector<Node*> signals,
                                  std::vector<Way*> footpaths,
@@ -336,8 +336,8 @@ namespace gps_navigation{
                                  std::vector<Node*> planned_path,
                                  std::vector<Node*> local_network){
 
-    SpatioTemporalGraph graph;
-    SpatioTemporalNode curr_node;
+    planner_msgs::SpatioTemporalGraph graph;
+    planner_msgs::SpatioTemporalNode curr_node;
     //SpatioTemporalWay curr_way;
     geometry_msgs::Point curr_point;
 

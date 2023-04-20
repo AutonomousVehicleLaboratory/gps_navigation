@@ -16,7 +16,8 @@
 #include <gps_navigation/graph.h>
 #include <gps_navigation/utils.h>
 #include <gps_navigation/render_bev.h>
-#include <gps_navigation/SpatioTemporalGraph.h>
+// #include <gps_navigation/SpatioTemporalGraph.h>
+#include <planner_msgs/SpatioTemporalGraph.h>
 #include <vector>
 #include <nav_msgs/Path.h>
 #include <visualization_msgs/Marker.h>
@@ -41,7 +42,7 @@ namespace gps_navigation{
       void SpeedCallback(const pacmod_msgs::VehicleSpeedRpt::ConstPtr& msg);
       void PublishGpsMap();
 
-      SpatioTemporalGraph ParseGraph(std::vector<Node*> stops,
+      planner_msgs::SpatioTemporalGraph ParseGraph(std::vector<Node*> stops,
                                      std::vector<Node*> crossings,
                                      std::vector<Node*> signals,
                                      std::vector<Way*> footpaths,

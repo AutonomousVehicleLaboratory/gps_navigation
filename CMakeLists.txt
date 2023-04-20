@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   tf
   std_msgs
   sensor_msgs
+  planner_msgs
   image_transport
   cv_bridge
   message_generation
