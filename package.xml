@@ -65,7 +65,6 @@
   <build_export_depend>geometry_msgs</build_export_depend>
   <build_export_depend>tinyxml</build_export_depend>
   <build_export_depend>cv_bridge</build_export_depend>
-  <build_export_depend>message_runtime</build_export_depend>
   <build_export_depend>pacmod_msgs</build_export_depend>
 
   <exec_depend>roscpp</exec_depend>
