@@ -105,9 +105,11 @@ namespace gps_navigation{
       // Variables    
       Node* ref_start = new Node;
       Node* gps_pose = new Node;
+      Node* last_gps_pose = new Node;
       int gps_ego_counter = 0;
       bool gps_avail = false;
       bool imu_avail = false;
+      bool gps_init = false;
       bool new_plan = false;
       bool new_gps_msg = false;
       bool has_clicked_point = false;

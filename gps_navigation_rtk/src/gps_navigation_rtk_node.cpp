@@ -94,13 +94,29 @@ namespace gps_navigation{
     gps_viz.scale.y = 9.2;
     
     geometry_msgs::Point gps_point;
-    std::pair<double, double> dx_dy = RelativeDisplacement(ref_start, gps_pose);
-    gps_point.x = dx_dy.first;
-    gps_point.y = dx_dy.second;
+    std::pair<double, double> dmap = RelativeDisplacement(ref_start, gps_pose);
+    gps_point.x = dmap.first;
+    gps_point.y = dmap.second;
     gps_point.z = 0;
   
-    gps_viz.points.push_back(gps_point);
+    if (!gps_init){
+      gps_init = true;
+      last_gps_pose->lat = gps_pose->lat;
+      last_gps_pose->lon = gps_pose->lon;
+      return;
+    }
+
+    std::pair<double, double> dmap_prev = RelativeDisplacement(ref_start, last_gps_pose);
+    // std::cout << "dx: " << dx.first << ", dy: " << dx.second << std::endl;
+    double yaw = atan2(dmap.second - dmap_prev.second, 
+                       dmap.first - dmap_prev.first);
+
+
+
+    gps_viz = GetMarker(1, 0, ros::Time::now(), dmap.first, dmap.second, 0.0, yaw);
     gps_viz_pub.publish(gps_viz);
+    last_gps_pose->lat = gps_pose->lat;
+    last_gps_pose->lon = gps_pose->lon;
 
     if(gps_avail && has_clicked_point){
       // Closest node wrt position of ego vehicle
