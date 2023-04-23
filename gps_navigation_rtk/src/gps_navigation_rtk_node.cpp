@@ -43,16 +43,16 @@ namespace gps_navigation{
     std::string osm_path;
     double radius;
 
-    if(n.getParam("/gps_navigation/osm_path", osm_path)){
+    if(n.getParam("/gps_navigation_rtk/osm_path", osm_path)){
       std::cout<<"The open street map file's path is set to be: "<<osm_path<<"\n";
     }
-    if(n.getParam("/gps_navigation/radius", radius)){
+    if(n.getParam("/gps_navigation_rtk/radius", radius)){
       std::cout<<"The search radius for construction is set to be: "<<radius<<"\n";
     }
-    if(n.getParam("/gps_navigation/replan_threshold", replan_threshold)){
+    if(n.getParam("/gps_navigation_rtk/replan_threshold", replan_threshold)){
       std::cout<<"The replan threshold is set to be: "<<replan_threshold<<"\n";
     }
-    if(n.getParam("/gps_navigation/bfs_horizon", bfs_horizon)){
+    if(n.getParam("/gps_navigation_rtk/bfs_horizon", bfs_horizon)){
       std::cout<<"The replan threshold is set to be: "<< bfs_horizon <<"\n";
     }
 
@@ -762,7 +762,8 @@ namespace gps_navigation{
   }
 }
 int main(int argc, char **argv){
-  ros::init(argc, argv, "gps_navigation");
+  
+  ros::init(argc, argv, "gps_navigation_rtk");
   gps_navigation::GpsNavigationNode gps_nav_node;
   while(ros::ok()){
     static_cast<void>(gps_nav_node.VisualizeNetwork());
